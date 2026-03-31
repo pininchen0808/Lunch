@@ -42,10 +42,12 @@
         </nav>
     </header>
 
-    <main class="max-w-3xl mx-auto p-4 md:p-6">
+    <!-- 將主容器加寬至 max-w-5xl，讓左右排版有足夠空間 -->
+    <main class="max-w-5xl mx-auto p-4 md:p-6">
         
         <!-- ==================== 第一頁：抽籤主頁 ==================== -->
-        <div id="home-view" class="space-y-6">
+        <!-- 抽籤首頁維持在中央，寬度適中 (max-w-3xl) -->
+        <div id="home-view" class="max-w-3xl mx-auto space-y-6">
             <!-- 1. 誰抽籤 -->
             <div class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60]">
                 <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">1. 誰抽籤</h2>
@@ -105,22 +107,58 @@
 
 
         <!-- ==================== 第二頁：餐廳管理 ==================== -->
-        <div id="admin-view" class="hidden space-y-6">
-            <!-- 新增/編輯表單 -->
-            <div class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60]">
-                <h2 id="form-title" class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">➕ 新增餐廳</h2>
-                <form id="restaurant-form" class="space-y-4">
-                    <input type="hidden" id="rest-id">
-                    
-                    <div>
-                        <label class="block font-bold mb-1">餐廳名稱</label>
-                        <input type="text" id="rest-name" required placeholder="例如：巷口麵攤" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
-                    </div>
-                    
-                    <div>
-                        <label class="block font-bold mb-1">怎吃 (必選)</label>
-                        <select id="rest-eat-method" required class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
-                            <option value="">請選擇</option>
+        <!-- 使用一個單純的 div 控制顯示隱藏，內部再使用 flexbox 切割版面 -->
+        <div id="admin-view" class="hidden">
+            <!-- md:flex 表示在平版以上尺寸會啟動左右並排 -->
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                
+                <!-- 新增/編輯表單 (左側 1/3) -->
+                <!-- md:sticky 讓它只在電腦上吸頂，手機版不吸頂避免擋住畫面 -->
+                <div class="w-full md:w-1/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#E27D60] md:sticky md:top-24 z-10">
+                    <h2 id="form-title" class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">➕ 新增餐廳</h2>
+                    <form id="restaurant-form" class="space-y-4">
+                        <input type="hidden" id="rest-id">
+                        
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">餐廳名稱</label>
+                            <input type="text" id="rest-name" required placeholder="例如：巷口麵攤" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
+                        </div>
+                        
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">怎吃 (必選)</label>
+                            <select id="rest-eat-method" required class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
+                                <option value="">請選擇</option>
+                                <option value="騎車買回來">騎車買回來</option>
+                                <option value="騎車出去吃">騎車出去吃</option>
+                                <option value="走路出去吃">走路出去吃</option>
+                                <option value="訂公司午餐">訂公司午餐</option>
+                                <option value="訂Uber Eats">訂Uber Eats</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">訂餐方式 / 電話</label>
+                            <input type="text" id="rest-order-method" placeholder="例如：02-12345678 或 熊貓" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">備註</label>
+                            <input type="text" id="rest-note" placeholder="例如：禮拜二公休" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
+                        </div>
+
+                        <div class="flex flex-col xl:flex-row gap-3 pt-2">
+                            <button type="submit" id="btn-submit-rest" class="flex-1 bg-[#E27D60] text-white px-4 py-2 rounded-md hover:bg-[#c9654a] transition-colors font-bold whitespace-nowrap">儲存餐廳</button>
+                            <button type="button" id="btn-cancel-rest" class="hidden flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors font-bold whitespace-nowrap">取消</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 餐廳列表 (右側 2/3) -->
+                <div class="w-full md:w-2/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#E27D60]">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b-2 border-gray-100 pb-2 gap-2">
+                        <h2 class="text-lg font-bold">📋 餐廳列表</h2>
+                        <select id="filter-eat-method" class="p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
+                            <option value="all">全部顯示</option>
                             <option value="騎車買回來">騎車買回來</option>
                             <option value="騎車出去吃">騎車出去吃</option>
                             <option value="走路出去吃">走路出去吃</option>
@@ -128,40 +166,11 @@
                             <option value="訂Uber Eats">訂Uber Eats</option>
                         </select>
                     </div>
-
-                    <div>
-                        <label class="block font-bold mb-1">訂餐方式 / 電話</label>
-                        <input type="text" id="rest-order-method" placeholder="例如：02-12345678 或 熊貓" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
-                    </div>
-
-                    <div>
-                        <label class="block font-bold mb-1">備註</label>
-                        <input type="text" id="rest-note" placeholder="例如：禮拜二公休" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
-                    </div>
-
-                    <div class="flex gap-3 pt-2">
-                        <button type="submit" id="btn-submit-rest" class="bg-[#E27D60] text-white px-6 py-2 rounded-md hover:bg-[#c9654a] transition-colors font-bold">儲存餐廳</button>
-                        <button type="button" id="btn-cancel-rest" class="hidden bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors font-bold">取消編輯</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- 餐廳列表 -->
-            <div class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60]">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b-2 border-gray-100 pb-2 gap-2">
-                    <h2 class="text-lg font-bold">📋 餐廳列表</h2>
-                    <select id="filter-eat-method" class="p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
-                        <option value="all">全部顯示</option>
-                        <option value="騎車買回來">騎車買回來</option>
-                        <option value="騎車出去吃">騎車出去吃</option>
-                        <option value="走路出去吃">走路出去吃</option>
-                        <option value="訂公司午餐">訂公司午餐</option>
-                        <option value="訂Uber Eats">訂Uber Eats</option>
-                    </select>
+                    <ul id="restaurant-list" class="space-y-3">
+                        <!-- 列表將由 JS 渲染 -->
+                    </ul>
                 </div>
-                <ul id="restaurant-list" class="space-y-3">
-                    <!-- 列表將由 JS 渲染 -->
-                </ul>
+
             </div>
         </div>
 
@@ -193,7 +202,6 @@
 
         const app = initializeApp(firebaseConfig);
         
-        // 初始化 Analytics (加入 try-catch 避免在某些阻擋追蹤的瀏覽器環境下報錯)
         try {
             const analytics = getAnalytics(app);
         } catch (err) {
@@ -204,7 +212,7 @@
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'lunch-drawer-app';
 
-        // 定義資料庫路徑 (遵循 Mandatory Rule 1)
+        // 定義資料庫路徑
         const getDbCol = (colName) => collection(db, 'artifacts', appId, 'public', 'data', colName);
         const getDbDoc = (colName, docId) => doc(db, 'artifacts', appId, 'public', 'data', colName, docId);
 
@@ -223,16 +231,18 @@
             selectedRestaurant: null
         };
 
-        // UI 互動工具 (取代 alert)
+        // UI 互動工具
         function showToast(msg, isError = false) {
             const toast = document.createElement('div');
-            toast.className = `fixed bottom-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+            toast.className = `fixed bottom-4 right-4 text-white px-6 py-4 rounded-lg shadow-lg z-50 transition-opacity duration-300 font-bold ${isError ? 'bg-red-600' : 'bg-green-500'}`;
             toast.textContent = msg;
             document.body.appendChild(toast);
+            
+            const displayTime = isError ? 6000 : 3000;
             setTimeout(() => {
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            }, displayTime);
         }
 
         function formatDate(date) {
@@ -242,7 +252,7 @@
         }
 
         // ==========================================
-        // 系統啟動與驗證 (遵循 Mandatory Rule 3)
+        // 系統啟動與驗證
         // ==========================================
         const initSystem = async () => {
             try {
@@ -253,12 +263,16 @@
                 }
             } catch (err) {
                 console.error("驗證失敗:", err);
-                showToast("連線驗證失敗，請稍後再試", true);
+                document.querySelector('#loading-overlay .spinner').style.display = 'none';
+                document.querySelector('#loading-overlay h2').innerHTML = `
+                    <span style="color:#e63946;">連線失敗！</span><br>
+                    <span style="font-size:16px; color:#8C98A4; font-weight:normal;">請至 Firebase 控制台確認是否已啟用「匿名登入 (Anonymous)」</span>
+                `;
             }
         };
 
         onAuthStateChanged(auth, (user) => {
-            if (user && !currentUser) { // 避免重複綁定監聽器
+            if (user && !currentUser) {
                 currentUser = user;
                 document.getElementById('loading-overlay').style.opacity = '0';
                 setTimeout(() => document.getElementById('loading-overlay').classList.add('hidden'), 300);
@@ -268,8 +282,15 @@
             }
         });
 
+        const handleFirestoreError = (err, context) => {
+            console.error(`[${context}] 讀取錯誤:`, err);
+            if (err.code === 'permission-denied') {
+                showToast(`❌ 同步失敗 (${context})：Firestore 規則拒絕存取，請至 Firebase 控制台更新 Rules！`, true);
+            }
+        };
+
         // ==========================================
-        // 資料監聽 (遵循 Mandatory Rule 2: JS 端過濾排序)
+        // 資料監聽 (多人即時同步)
         // ==========================================
         let hasInitializedDefaultMembers = false;
         function startDataListeners() {
@@ -284,15 +305,15 @@
                 });
                 state.members.sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
                 
-                // 自動建立預設成員
                 if (state.members.length === 0 && !hasInitializedDefaultMembers) {
                     hasInitializedDefaultMembers = true;
                     ['品', '柔', 'Yo'].forEach(name => {
-                        addDoc(getDbCol('members'), { name, active: true, createdAt: serverTimestamp() });
+                        addDoc(getDbCol('members'), { name, active: true, createdAt: serverTimestamp() })
+                            .catch(e => console.warn("預設成員建立失敗 (可能是權限問題):", e));
                     });
                 }
                 renderMembers();
-            }, (err) => console.error("成員讀取錯誤:", err));
+            }, (err) => handleFirestoreError(err, '成員'));
 
             // 2. 監聽餐廳
             onSnapshot(getDbCol('restaurants'), (snap) => {
@@ -303,17 +324,16 @@
                 });
                 state.restaurants.sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
                 renderRestaurantList();
-            }, (err) => console.error("餐廳讀取錯誤:", err));
+            }, (err) => handleFirestoreError(err, '餐廳'));
 
             // 3. 監聽抽籤紀錄
             onSnapshot(getDbCol('drawLogs'), (snap) => {
                 state.logs = [];
                 snap.forEach(d => state.logs.push({ id: d.id, ...d.data() }));
-                // 時間反向排序，取前 20 筆
                 state.logs.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
                 const recentLogs = state.logs.slice(0, 20);
                 renderLogs(recentLogs);
-            }, (err) => console.error("紀錄讀取錯誤:", err));
+            }, (err) => handleFirestoreError(err, '紀錄'));
         }
 
         // ==========================================
@@ -370,10 +390,14 @@
             try {
                 await addDoc(getDbCol('members'), { name, active: true, createdAt: serverTimestamp() });
                 DOM_newMember.value = "";
-                showToast("新增成員成功！");
+                showToast("✅ 新增成員成功！");
             } catch (err) {
-                console.error(err);
-                showToast("新增失敗", true);
+                console.error("新增成員失敗:", err);
+                if (err.code === 'permission-denied') {
+                    showToast("❌ 儲存失敗：Firestore 權限不足，請檢查 Rules 設定！", true);
+                } else {
+                    showToast("❌ 儲存失敗", true);
+                }
             }
         }
         document.getElementById("btn-add-member").onclick = addMember;
@@ -390,7 +414,6 @@
             renderMembers();
             DOM_drawerResult.textContent = `🙋‍♂️ 本次抽籤者：${name}`;
             DOM_drawerResult.classList.remove("hidden");
-            
             DOM_step2.classList.remove("opacity-40", "pointer-events-none");
         }
 
@@ -418,7 +441,6 @@
                 const label = document.createElement("div");
                 label.className = "wheel-label";
                 const textAngle = start + (degree / 2);
-                // 修正：調整偏移量 (45px) 並加入 translateY(-50%) 讓文字在扇形內完美置中且不超線
                 label.style.transform = `rotate(${textAngle - 90}deg) translate(45px, -50%)`; 
                 label.textContent = method;
                 DOM_wheel.appendChild(label);
@@ -449,7 +471,7 @@
                 DOM_btnSpin.disabled = false;
                 
                 prepareSlotMachine();
-            }, 3000); // 對應 CSS transition
+            }, 3000);
         };
 
         // ==========================================
@@ -468,7 +490,6 @@
             DOM_btnRedrawRest.classList.add("hidden");
             DOM_btnDrawRest.classList.remove("hidden");
 
-            // 前端過濾符合的餐廳
             state.candidateRestaurants = state.restaurants.filter(r => r.eatMethod === state.selectedEatMethod);
 
             if (state.candidateRestaurants.length === 0) {
@@ -518,7 +539,6 @@
             DOM_btnRedrawRest.classList.remove("hidden");
             DOM_btnRedrawRest.disabled = false;
 
-            // 寫入紀錄
             try {
                 await addDoc(getDbCol("drawLogs"), {
                     drawerName: state.selectedDrawer,
@@ -531,6 +551,9 @@
                 });
             } catch (err) {
                 console.error("寫入紀錄失敗:", err);
+                if (err.code === 'permission-denied') {
+                    showToast("❌ 紀錄儲存失敗：Firestore 權限不足！", true);
+                }
             }
         }
         DOM_btnDrawRest.onclick = runSlotMachine;
@@ -546,7 +569,6 @@
                 const li = document.createElement("li");
                 li.className = "flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg";
                 
-                // 將 Timestamp 轉為日期物件
                 let dateObj = new Date();
                 if (data.createdAt?.toDate) dateObj = data.createdAt.toDate();
                 else if (data.createdAt?.toMillis) dateObj = new Date(data.createdAt.toMillis());
@@ -603,7 +625,6 @@
                 DOM_restList.appendChild(li);
             });
 
-            // 綁定編輯與刪除事件
             document.querySelectorAll(".btn-edit").forEach(btn => {
                 btn.onclick = () => editRestaurant(btn.dataset.id);
             });
@@ -643,7 +664,11 @@
                 resetRestForm();
             } catch (error) {
                 console.error("儲存失敗:", error);
-                showToast("儲存失敗", true);
+                if (error.code === 'permission-denied') {
+                    showToast("❌ 儲存失敗：Firestore 權限不足，請檢查 Rules 設定！", true);
+                } else {
+                    showToast("❌ 儲存失敗", true);
+                }
             } finally {
                 submitBtn.disabled = false;
             }
@@ -666,7 +691,6 @@
         }
 
         async function deleteRestaurant(id) {
-            // 使用內建 confirm 作簡單防護
             const card = document.createElement('div');
             card.className = "fixed top-0 left-0 w-full h-full bg-black/50 z-50 flex items-center justify-center";
             card.innerHTML = `
@@ -684,12 +708,15 @@
             document.getElementById("del-confirm").onclick = async () => {
                 card.remove();
                 try {
-                    // 軟刪除，避免破壞其他資料結構
                     await updateDoc(getDbDoc("restaurants", id), { active: false });
                     showToast("🗑️ 已刪除餐廳");
                 } catch (error) {
                     console.error("刪除失敗:", error);
-                    showToast("刪除失敗", true);
+                    if (error.code === 'permission-denied') {
+                        showToast("❌ 刪除失敗：Firestore 權限不足！", true);
+                    } else {
+                        showToast("❌ 刪除失敗", true);
+                    }
                 }
             };
         }
