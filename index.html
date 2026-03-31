@@ -45,16 +45,13 @@
         <nav class="flex justify-center gap-2 flex-wrap">
             <button id="nav-home" class="font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white">抽抽</button>
             <button id="nav-admin" class="font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#E27D60] hover:text-white">吃啥</button>
-            <!-- 喝啥按鈕移到最右邊 -->
             <button id="nav-drink" class="font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#41B3A3] hover:text-white">喝啥抽抽</button>
         </nav>
     </header>
 
-    <!-- 將主容器加寬至 max-w-5xl，給予充足空間 -->
     <main class="max-w-5xl mx-auto p-4 md:p-6">
         
         <!-- ==================== 第一頁：抽籤主頁 ==================== -->
-        <!-- 改為左右 Flex 排版：左側 3/4 抽籤區，右側 1/4 紀錄區 -->
         <div id="home-view" class="flex flex-col lg:flex-row gap-6 items-start w-full">
             
             <!-- 左側 3/4：主要抽籤流程 -->
@@ -85,7 +82,39 @@
                     <div class="text-center mt-4">
                         <button id="btn-spin-wheel" class="bg-[#E27D60] text-white px-8 py-3 text-lg font-bold rounded-md hover:bg-[#c9654a] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md">轉動輪盤</button>
                     </div>
+
+                    <!-- 手動選擇區塊 -->
+                    <div class="mt-6 border-t border-gray-100 pt-4 flex flex-col items-center">
+                        <p class="text-sm text-gray-500 mb-2">或直接手動選擇：</p>
+                        <div class="flex gap-2 w-full max-w-xs">
+                            <select id="manual-eat-select" class="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
+                                <option value="" disabled selected>-- 請選擇 --</option>
+                                <option value="騎車買回來">騎車買回來</option>
+                                <option value="騎車出去吃">騎車出去吃</option>
+                                <option value="走路出去吃">走路出去吃</option>
+                                <option value="訂公司午餐">訂公司午餐</option>
+                                <option value="訂Uber Eats">訂Uber Eats</option>
+                            </select>
+                            <button id="btn-manual-eat" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors font-bold whitespace-nowrap">確定</button>
+                        </div>
+                    </div>
+
                     <div id="eat-method-result" class="hidden mt-4 text-center font-bold text-xl text-[#E27D60] bg-[#fff3e0] p-3 rounded-lg"></div>
+                </div>
+
+                <!-- 誰去買 (條件顯示) -->
+                <div id="step-who-rides-card" class="hidden bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60] transition-opacity duration-300">
+                    <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">誰去買 / 騎車？</h2>
+                    <div>
+                        <p class="font-bold mb-2 text-[#3E4A59]">今天誰有吃 (點擊可取消/加入)：</p>
+                        <div id="eating-members-list" class="flex flex-wrap gap-2 mb-4">
+                            <!-- JS 動態生成 -->
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button id="btn-draw-riders" class="bg-[#E27D60] text-white px-6 py-2 font-bold rounded-md hover:bg-[#c9654a] transition-colors shadow-md">🛵 抽兩人去</button>
+                    </div>
+                    <div id="riders-result" class="hidden mt-4 text-center font-bold text-xl text-[#E27D60] bg-[#fff3e0] p-3 rounded-lg"></div>
                 </div>
 
                 <!-- 3. 吃啥 -->
@@ -110,7 +139,11 @@
 
             <!-- 右側 1/4：抽籤紀錄側邊欄 -->
             <div class="w-full lg:w-1/4 bg-white rounded-xl p-4 shadow-sm border-t-4 border-[#E27D60] lg:sticky lg:top-24 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar flex flex-col">
-                <h2 class="text-base font-bold mb-3 border-b-2 border-gray-100 pb-2 sticky top-0 bg-white z-10">📜 抽籤紀錄</h2>
+                <div class="flex justify-between items-center mb-3 border-b-2 border-gray-100 pb-2 sticky top-0 bg-white z-10">
+                    <h2 class="text-base font-bold">📜 抽籤紀錄</h2>
+                    <!-- 清空紀錄按鈕 -->
+                    <button id="btn-clear-logs" class="text-xs bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded transition-colors font-bold">🗑️ 清空</button>
+                </div>
                 <ul id="log-list" class="space-y-3 flex-1">
                     <!-- 紀錄將由 JS 渲染 -->
                 </ul>
@@ -121,7 +154,7 @@
         <div id="admin-view" class="hidden">
             <div class="flex flex-col md:flex-row gap-6 items-start">
                 
-                <!-- 新增/編輯表單 (左側 1/3) -->
+                <!-- 新增/編輯表單 -->
                 <div class="w-full md:w-1/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#E27D60] md:sticky md:top-24 z-10">
                     <h2 id="form-title" class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">➕ 新增餐廳</h2>
                     <form id="restaurant-form" class="space-y-4">
@@ -161,7 +194,7 @@
                     </form>
                 </div>
 
-                <!-- 餐廳列表 (右側 2/3) -->
+                <!-- 餐廳列表 -->
                 <div class="w-full md:w-2/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#E27D60]">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b-2 border-gray-100 pb-2 gap-2">
                         <h2 class="text-lg font-bold">📋 餐廳列表</h2>
@@ -204,10 +237,9 @@
                 </div>
             </div>
 
-            <!-- 下半部：飲料管理 (左右切版) -->
+            <!-- 下半部：飲料管理 -->
             <div class="flex flex-col md:flex-row gap-6 items-start">
                 
-                <!-- 左側：新增/編輯飲料表單 -->
                 <div class="w-full md:w-1/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#41B3A3] md:sticky md:top-24 z-10">
                     <h2 id="drink-form-title" class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">➕ 新增飲料店</h2>
                     <form id="drink-form" class="space-y-4">
@@ -235,7 +267,6 @@
                     </form>
                 </div>
 
-                <!-- 右側：飲料列表 -->
                 <div class="w-full md:w-2/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#41B3A3]">
                     <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">📋 飲料店列表</h2>
                     <ul id="drink-list" class="space-y-3">
@@ -248,12 +279,12 @@
 
     </main>
 
-    <!-- 邏輯腳本區塊 (Firebase v12 + 業務邏輯) -->
+    <!-- 邏輯腳本區塊 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, serverTimestamp, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js"; // 新增 getDocs, deleteDoc
 
         // ==========================================
         // Firebase 設定與初始化
@@ -275,7 +306,6 @@
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'lunch-drawer-app';
 
-        // 資料庫路徑 (新增 drinks collection)
         const getDbCol = (colName) => collection(db, 'artifacts', appId, 'public', 'data', colName);
         const getDbDoc = (colName, docId) => doc(db, 'artifacts', appId, 'public', 'data', colName, docId);
 
@@ -293,7 +323,9 @@
             selectedEatMethod: null,
             candidateRestaurants: [],
             selectedRestaurant: null,
-            selectedDrink: null
+            selectedDrink: null,
+            eatingMembers: [],
+            selectedRiders: null
         };
 
         // UI 工具
@@ -387,12 +419,12 @@
                 state.logs = [];
                 snap.forEach(d => state.logs.push({ id: d.id, ...d.data() }));
                 state.logs.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
-                renderLogs(state.logs.slice(0, 50)); // 取多一點因為現在側邊欄可滑動
+                renderLogs(state.logs.slice(0, 50)); 
             }, (err) => handleFirestoreError(err, '紀錄'));
         }
 
         // ==========================================
-        // 視圖切換邏輯 (支援三個頁籤)
+        // 視圖切換邏輯
         // ==========================================
         const views = {
             home: document.getElementById('home-view'),
@@ -409,20 +441,15 @@
             Object.keys(views).forEach(k => {
                 if (k === viewName) {
                     views[k].classList.remove('hidden');
-                    // 點亮當前標籤的顏色 (特別處理喝啥)
                     if(k === 'home') {
                         navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white";
-                        // 把 home-view 切換回 flex 顯示
                         views[k].classList.add('flex');
                     }
                     else if(k === 'drink') navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#41B3A3] text-white";
                     else navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white";
                 } else {
                     views[k].classList.add('hidden');
-                    // 首頁隱藏時要移除 flex 避免破版
                     if (k === 'home') views[k].classList.remove('flex');
-
-                    // 恢復其他標籤顏色
                     if(k === 'drink') navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#41B3A3] hover:text-white";
                     else navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#E27D60] hover:text-white";
                 }
@@ -470,7 +497,7 @@
         };
 
         // ==========================================
-        // 區塊：怎吃 (轉盤)
+        // 區塊：怎吃 (轉盤與手動)
         // ==========================================
         const DOM_wheel = document.getElementById("wheel");
         function setupWheel() {
@@ -493,11 +520,34 @@
         }
 
         let currentRotation = 0;
+
+        function processEatMethod(method) {
+            state.selectedEatMethod = method;
+            document.getElementById("eat-method-result").textContent = `🛵 今天怎吃：${state.selectedEatMethod}`;
+            document.getElementById("eat-method-result").classList.remove("hidden");
+            
+            const whoRidesCard = document.getElementById("step-who-rides-card");
+            if (method === "騎車出去吃" || method === "騎車買回來") {
+                whoRidesCard.classList.remove("hidden");
+                state.eatingMembers = state.members.map(m => m.name);
+                state.selectedRiders = null;
+                document.getElementById("riders-result").classList.add("hidden");
+                renderEatingMembers();
+            } else {
+                whoRidesCard.classList.add("hidden");
+                state.selectedRiders = null;
+            }
+
+            prepareSlotMachine();
+        }
+
         document.getElementById("btn-spin-wheel").onclick = () => {
             if (!state.selectedDrawer) return showToast("請先在第一步選擇誰要抽籤！", true);
             document.getElementById("btn-spin-wheel").disabled = true;
+            document.getElementById("btn-manual-eat").disabled = true;
             document.getElementById("eat-method-result").classList.add("hidden");
             document.getElementById("step3-card").classList.add("opacity-40", "pointer-events-none");
+            document.getElementById("step-who-rides-card").classList.add("hidden");
             
             const targetIndex = Math.floor(Math.random() * state.eatMethods.length);
             const sliceDegree = 360 / state.eatMethods.length;
@@ -506,12 +556,66 @@
             DOM_wheel.style.transform = `rotate(${currentRotation}deg)`;
 
             setTimeout(() => {
-                state.selectedEatMethod = state.eatMethods[targetIndex];
-                document.getElementById("eat-method-result").textContent = `🛵 今天怎吃：${state.selectedEatMethod}`;
-                document.getElementById("eat-method-result").classList.remove("hidden");
                 document.getElementById("btn-spin-wheel").disabled = false;
-                prepareSlotMachine();
+                document.getElementById("btn-manual-eat").disabled = false;
+                processEatMethod(state.eatMethods[targetIndex]);
             }, 3000);
+        };
+
+        const handleManualEat = () => {
+            if (!state.selectedDrawer) {
+                document.getElementById("manual-eat-select").value = "";
+                return showToast("請先在第一步選擇誰要抽籤！", true);
+            }
+            const selected = document.getElementById("manual-eat-select").value;
+            if (!selected) return;
+            processEatMethod(selected);
+            
+            setTimeout(() => {
+                const targetId = (selected === "騎車出去吃" || selected === "騎車買回來") 
+                    ? "step-who-rides-card" 
+                    : "step3-card";
+                document.getElementById(targetId).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        };
+
+        document.getElementById("btn-manual-eat").onclick = handleManualEat;
+        document.getElementById("manual-eat-select").onchange = handleManualEat;
+
+        function renderEatingMembers() {
+            const container = document.getElementById("eating-members-list");
+            container.innerHTML = "";
+            state.members.forEach(m => {
+                const btn = document.createElement("button");
+                const isEating = state.eatingMembers.includes(m.name);
+                btn.className = `px-4 py-2 rounded-full border transition-colors font-bold ${isEating ? 'bg-[#41B3A3] text-white border-[#41B3A3]' : 'bg-[#FDFBF7] text-gray-400 border-gray-300 hover:bg-gray-200 hover:text-gray-600'}`;
+                btn.textContent = m.name;
+                btn.onclick = () => {
+                    if (isEating) {
+                        state.eatingMembers = state.eatingMembers.filter(name => name !== m.name);
+                    } else {
+                        state.eatingMembers.push(m.name);
+                    }
+                    renderEatingMembers();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        document.getElementById("btn-draw-riders").onclick = () => {
+            if (state.eatingMembers.length < 2) {
+                return showToast("請至少保留兩個人有吃才能抽喔！", true);
+            }
+            const shuffled = [...state.eatingMembers].sort(() => 0.5 - Math.random());
+            state.selectedRiders = shuffled.slice(0, 2);
+            
+            const resDiv = document.getElementById("riders-result");
+            resDiv.innerHTML = `🛵 負責去的人：<br><span class="text-2xl mt-2 inline-block">${state.selectedRiders.join(" & ")}</span>`;
+            resDiv.classList.remove("hidden");
+            
+            setTimeout(() => {
+                document.getElementById("step3-card").scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
         };
 
         // ==========================================
@@ -537,6 +641,11 @@
 
         function runSlotMachine() {
             if (state.candidateRestaurants.length === 0) return;
+
+            if ((state.selectedEatMethod === "騎車出去吃" || state.selectedEatMethod === "騎車買回來") && !state.selectedRiders) {
+                return showToast("請先在上方點擊「抽兩人去」決定派誰去買喔！", true);
+            }
+
             document.getElementById("btn-draw-restaurant").disabled = true;
             document.getElementById("btn-redraw-restaurant").disabled = true;
             document.getElementById("slot-machine").classList.add("spinning");
@@ -573,6 +682,7 @@
                     eatMethod: state.selectedEatMethod,
                     restaurantId: state.selectedRestaurant.id,
                     restaurantName: state.selectedRestaurant.name,
+                    riders: state.selectedRiders || null,
                     createdAt: serverTimestamp()
                 });
             } catch (err) {}
@@ -581,7 +691,7 @@
         document.getElementById("btn-redraw-restaurant").onclick = runSlotMachine;
 
         // ==========================================
-        // 右側側邊欄：小紀錄渲染 (專為 1/4 窄寬度設計)
+        // 右側側邊欄：小紀錄渲染與刪除功能
         // ==========================================
         function renderLogs(recentLogs) {
             const DOM_logs = document.getElementById("log-list");
@@ -594,7 +704,6 @@
 
             recentLogs.forEach(data => {
                 const li = document.createElement("li");
-                // 改用 flex-col 垂直排列，並縮小 padding 以適應側邊欄
                 li.className = "flex flex-col bg-gray-50 border border-gray-200 p-3 rounded-lg";
                 
                 let dateObj = new Date();
@@ -602,11 +711,12 @@
                 else if (data.createdAt?.toMillis) dateObj = new Date(data.createdAt.toMillis());
 
                 const isDrink = data.eatMethod === "喝飲料";
+                const ridersText = data.riders ? `<br><span class="text-[#E27D60] font-bold inline-block mt-1">🛵 ${data.riders.join(" & ")} 去買</span>` : '';
                 
                 li.innerHTML = `
                     <div class="mb-1">
                         <h4 class="font-bold text-base text-[#3E4A59] leading-tight">${data.restaurantName}</h4>
-                        <span class="text-xs font-normal ${isDrink ? 'text-[#41B3A3]' : 'text-gray-500'}">(${data.eatMethod || '無'})</span>
+                        <span class="text-xs font-normal ${isDrink ? 'text-[#41B3A3]' : 'text-gray-500'}">(${data.eatMethod || '無'})${ridersText}</span>
                     </div>
                     <div class="flex justify-between items-end mt-1">
                         <span class="text-xs text-gray-500 font-bold">🧑 ${data.drawerName || '未指定'}</span>
@@ -616,6 +726,33 @@
                 DOM_logs.appendChild(li);
             });
         }
+
+        // 清空紀錄功能
+        document.getElementById("btn-clear-logs").onclick = async () => {
+            if (!confirm("確定要清空所有抽籤紀錄嗎？這無法復原喔！")) return;
+
+            const btn = document.getElementById("btn-clear-logs");
+            btn.disabled = true;
+            btn.textContent = "清空中...";
+
+            try {
+                const snapshot = await getDocs(getDbCol('drawLogs'));
+                const deletePromises = [];
+                snapshot.forEach(d => {
+                    deletePromises.push(deleteDoc(d.ref));
+                });
+                
+                // 等待所有刪除動作完成
+                await Promise.all(deletePromises);
+                showToast("🗑️ 已清空所有抽籤紀錄！");
+            } catch (error) {
+                console.error("清空紀錄失敗:", error);
+                showToast("❌ 清空失敗，請檢查權限。", true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "🗑️ 清空";
+            }
+        };
 
         // ==========================================
         // 餐廳管理功能
@@ -715,8 +852,6 @@
         // ==========================================
         // 喝啥 (飲料管理與抽籤)
         // ==========================================
-        
-        // 渲染飲料列表
         function renderDrinkList() {
             const DOM_drinkList = document.getElementById("drink-list");
             DOM_drinkList.innerHTML = "";
@@ -745,7 +880,6 @@
             });
         }
 
-        // 飲料表單送出
         document.getElementById("drink-form").onsubmit = async (e) => {
             e.preventDefault();
             const id = document.getElementById("drink-id").value;
