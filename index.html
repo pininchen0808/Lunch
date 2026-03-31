@@ -56,7 +56,7 @@
             
             <!-- 左側 3/4：主要抽籤流程 -->
             <div class="w-full lg:w-3/4 space-y-6">
-                <!-- 1. 誰抽 -->
+                <!-- 1. 誰抽籤 -->
                 <div class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60]">
                     <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">1. 誰抽籤</h2>
                     <div class="flex flex-col sm:flex-row gap-3 mb-4">
@@ -464,20 +464,60 @@
         // ==========================================
         const DOM_members = document.getElementById("member-list");
         const DOM_newMember = document.getElementById("new-member-name");
+        
+        // 新增：刪除成員邏輯
+        window.deleteMember = async (id, name) => {
+            if(confirm(`確定要刪除成員「${name}」嗎？`)) {
+                try {
+                    await updateDoc(getDbDoc("members", id), { active: false });
+                    showToast(`🗑️ 已刪除成員「${name}」`);
+                    
+                    // 如果刪除的剛好是目前選中的抽籤者，就重置狀態
+                    if (state.selectedDrawer === name) {
+                        state.selectedDrawer = null;
+                        document.getElementById("drawer-result").classList.add("hidden");
+                        document.getElementById("step2-card").classList.add("opacity-40", "pointer-events-none");
+                    }
+                } catch(e) {
+                    console.error("刪除成員失敗", e);
+                    showToast("❌ 刪除失敗，請檢查權限", true);
+                }
+            }
+        };
+
         function renderMembers() {
             DOM_members.innerHTML = "";
             state.members.forEach(m => {
-                const btn = document.createElement("button");
-                btn.className = `px-4 py-2 rounded-full border transition-colors font-bold ${state.selectedDrawer === m.name ? 'bg-[#E27D60] text-white border-[#E27D60]' : 'bg-[#FDFBF7] text-[#3E4A59] border-[#E0E4E8] hover:bg-[#E8A87C] hover:text-white'}`;
-                btn.textContent = m.name;
-                btn.onclick = () => {
+                const wrapper = document.createElement("div");
+                const isSelected = state.selectedDrawer === m.name;
+                
+                // 改用 wrapper 組合「名稱按鈕」與「刪除按鈕」
+                wrapper.className = `inline-flex items-stretch rounded-full border transition-colors overflow-hidden ${isSelected ? 'bg-[#E27D60] text-white border-[#E27D60]' : 'bg-[#FDFBF7] text-[#3E4A59] border-[#E0E4E8] hover:border-[#E8A87C]'}`;
+
+                // 名稱按鈕 (選擇抽籤者)
+                const nameBtn = document.createElement("button");
+                nameBtn.className = `px-3 py-1.5 font-bold transition-colors ${isSelected ? 'hover:bg-[#c9654a]' : 'hover:bg-[#E8A87C] hover:text-white'}`;
+                nameBtn.textContent = m.name;
+                nameBtn.onclick = () => {
                     state.selectedDrawer = m.name;
                     renderMembers();
                     document.getElementById("drawer-result").textContent = `🙋‍♂️ 本次抽籤者：${m.name}`;
                     document.getElementById("drawer-result").classList.remove("hidden");
                     document.getElementById("step2-card").classList.remove("opacity-40", "pointer-events-none");
                 };
-                DOM_members.appendChild(btn);
+
+                // 刪除按鈕 (✖)
+                const delBtn = document.createElement("button");
+                delBtn.className = `px-2 py-1.5 text-xs flex items-center justify-center transition-colors ${isSelected ? 'text-white hover:bg-[#c9654a]' : 'text-gray-400 hover:text-red-500 hover:bg-gray-100'}`;
+                delBtn.innerHTML = "✖";
+                delBtn.onclick = (e) => {
+                    e.stopPropagation(); // 防止觸發到父層或其他元素的點擊事件
+                    deleteMember(m.id, m.name);
+                };
+
+                wrapper.appendChild(nameBtn);
+                wrapper.appendChild(delBtn);
+                DOM_members.appendChild(wrapper);
             });
         }
         document.getElementById("btn-add-member").onclick = async () => {
