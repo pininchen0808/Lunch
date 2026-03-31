@@ -56,7 +56,7 @@
             
             <!-- 左側 3/4：主要抽籤流程 -->
             <div class="w-full lg:w-3/4 space-y-6">
-                <!-- 1. 誰抽籤 -->
+                <!-- 1. 誰抽 -->
                 <div class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60]">
                     <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">1. 誰抽籤</h2>
                     <div class="flex flex-col sm:flex-row gap-3 mb-4">
@@ -106,7 +106,7 @@
                 <div id="step-who-rides-card" class="hidden bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60] transition-opacity duration-300">
                     <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">誰去買 / 騎車？</h2>
                     <div>
-                        <p class="font-bold mb-2 text-[#3E4A59]">今天誰有吃 (點擊可取消/加入)：</p>
+                        <p class="font-bold mb-2 text-[#3E4A59]">有誰 (點擊可取消/加入)：</p>
                         <div id="eating-members-list" class="flex flex-wrap gap-2 mb-4">
                             <!-- JS 動態生成 -->
                         </div>
@@ -162,29 +162,29 @@
                         
                         <div>
                             <label class="block font-bold mb-1 text-sm text-[#3E4A59]">餐廳名稱</label>
-                            <input type="text" id="rest-name" required placeholder="例如：巷口麵攤" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
+                            <input type="text" id="rest-name" required placeholder="例如：我家巷口" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
                         </div>
                         
                         <div>
-                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">怎吃 (必選)</label>
-                            <select id="rest-eat-method" required class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
-                                <option value="">請選擇</option>
-                                <option value="騎車買回來">騎車買回來</option>
-                                <option value="騎車出去吃">騎車出去吃</option>
-                                <option value="走路出去吃">走路出去吃</option>
-                                <option value="訂公司午餐">訂公司午餐</option>
-                                <option value="訂Uber Eats">訂Uber Eats</option>
-                            </select>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">怎吃 (可複選)</label>
+                            <div class="flex flex-wrap gap-3 mt-1">
+                                <label class="flex items-center space-x-1 cursor-pointer text-sm"><input type="checkbox" name="eatMethod" value="騎車買回來" class="form-checkbox h-4 w-4 text-[#E27D60] rounded"><span>騎車買回來</span></label>
+                                <label class="flex items-center space-x-1 cursor-pointer text-sm"><input type="checkbox" name="eatMethod" value="騎車出去吃" class="form-checkbox h-4 w-4 text-[#E27D60] rounded"><span>騎車出去吃</span></label>
+                                <label class="flex items-center space-x-1 cursor-pointer text-sm"><input type="checkbox" name="eatMethod" value="走路出去吃" class="form-checkbox h-4 w-4 text-[#E27D60] rounded"><span>走路出去吃</span></label>
+                                <label class="flex items-center space-x-1 cursor-pointer text-sm"><input type="checkbox" name="eatMethod" value="訂公司午餐" class="form-checkbox h-4 w-4 text-[#E27D60] rounded"><span>訂公司午餐</span></label>
+                                <label class="flex items-center space-x-1 cursor-pointer text-sm"><input type="checkbox" name="eatMethod" value="訂Uber Eats" class="form-checkbox h-4 w-4 text-[#E27D60] rounded"><span>訂Uber Eats</span></label>
+                            </div>
+                            <p id="eat-method-error" class="text-red-500 text-xs hidden mt-1">請至少勾選一種方式</p>
                         </div>
 
                         <div>
                             <label class="block font-bold mb-1 text-sm text-[#3E4A59]">訂餐方式 / 電話</label>
-                            <input type="text" id="rest-order-method" placeholder="例如：02-12345678 或 熊貓" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
+                            <input type="text" id="rest-order-method" placeholder="例如：04-12345678 或 Uber Eats" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
                         </div>
 
                         <div>
                             <label class="block font-bold mb-1 text-sm text-[#3E4A59]">備註</label>
-                            <input type="text" id="rest-note" placeholder="例如：禮拜二公休" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
+                            <input type="text" id="rest-note" placeholder="例如：禮拜二公休、要提早訂" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]">
                         </div>
 
                         <div class="flex flex-col xl:flex-row gap-3 pt-2">
@@ -247,17 +247,17 @@
                         
                         <div>
                             <label class="block font-bold mb-1 text-sm text-[#3E4A59]">飲料店名 (必填)</label>
-                            <input type="text" id="drink-name" required placeholder="例如：50嵐" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#41B3A3]">
+                            <input type="text" id="drink-name" required placeholder="例如：八曜和茶" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#41B3A3]">
                         </div>
 
                         <div>
                             <label class="block font-bold mb-1 text-sm text-[#3E4A59]">分店名</label>
-                            <input type="text" id="drink-branch" placeholder="例如：台北站前店" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#41B3A3]">
+                            <input type="text" id="drink-branch" placeholder="例如：西屯店" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#41B3A3]">
                         </div>
 
                         <div>
                             <label class="block font-bold mb-1 text-sm text-[#3E4A59]">備註</label>
-                            <input type="text" id="drink-note" placeholder="例如：滿250外送" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#41B3A3]">
+                            <input type="text" id="drink-note" placeholder="例如：滿$250外送" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#41B3A3]">
                         </div>
 
                         <div class="flex flex-col xl:flex-row gap-3 pt-2">
@@ -627,7 +627,12 @@
             document.getElementById("restaurant-detail").classList.add("hidden");
             document.getElementById("btn-redraw-restaurant").classList.add("hidden");
             document.getElementById("btn-draw-restaurant").classList.remove("hidden");
-            state.candidateRestaurants = state.restaurants.filter(r => r.eatMethod === state.selectedEatMethod);
+            
+            // 讓候選餐廳支援陣列格式 (相容舊字串格式)
+            state.candidateRestaurants = state.restaurants.filter(r => {
+                const methods = Array.isArray(r.eatMethod) ? r.eatMethod : [r.eatMethod];
+                return methods.includes(state.selectedEatMethod);
+            });
             
             const btn = document.getElementById("btn-draw-restaurant");
             if (state.candidateRestaurants.length === 0) {
@@ -762,7 +767,13 @@
             const filterVal = document.getElementById("filter-eat-method").value;
             DOM_restList.innerHTML = "";
             let filtered = state.restaurants;
-            if (filterVal !== "all") filtered = state.restaurants.filter(r => r.eatMethod === filterVal);
+            
+            if (filterVal !== "all") {
+                filtered = state.restaurants.filter(r => {
+                    const methods = Array.isArray(r.eatMethod) ? r.eatMethod : [r.eatMethod];
+                    return methods.includes(filterVal);
+                });
+            }
 
             if (filtered.length === 0) {
                 DOM_restList.innerHTML = "<p class='text-center py-6 text-gray-400'>目前沒有符合的餐廳資料。</p>";
@@ -771,11 +782,15 @@
             filtered.forEach(rest => {
                 const li = document.createElement("li");
                 li.className = "flex flex-col sm:flex-row justify-between sm:items-center bg-gray-50 border border-gray-200 p-4 rounded-lg gap-3";
+                
+                const methods = Array.isArray(rest.eatMethod) ? rest.eatMethod : [rest.eatMethod];
+                const methodTags = methods.map(m => `<span class="bg-[#FDFBF7] px-2 py-1 rounded text-xs text-gray-600 border border-gray-200">📌 ${m}</span>`).join('');
+                
                 li.innerHTML = `
                     <div class="flex-1">
                         <h4 class="font-bold text-lg text-[#3E4A59]">${rest.name}</h4>
                         <div class="flex flex-wrap gap-2 mt-2">
-                            <span class="bg-[#FDFBF7] px-2 py-1 rounded text-xs text-gray-600 border border-gray-200">📌 ${rest.eatMethod}</span>
+                            ${methodTags}
                             <span class="bg-[#eef] px-2 py-1 rounded text-xs text-gray-600 border border-blue-100">📞 ${rest.orderMethod || '無'}</span>
                             <span class="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600 border border-gray-200">📝 ${rest.note || '無'}</span>
                         </div>
@@ -792,10 +807,19 @@
 
         document.getElementById("restaurant-form").onsubmit = async (e) => {
             e.preventDefault();
+            
+            // 取得所有有被勾選的選項
+            const checkedMethods = Array.from(document.querySelectorAll('input[name="eatMethod"]:checked')).map(cb => cb.value);
+            if (checkedMethods.length === 0) {
+                document.getElementById('eat-method-error').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('eat-method-error').classList.add('hidden');
+
             const id = document.getElementById("rest-id").value;
             const data = {
                 name: document.getElementById("rest-name").value.trim(),
-                eatMethod: document.getElementById("rest-eat-method").value,
+                eatMethod: checkedMethods, // 存入陣列
                 orderMethod: document.getElementById("rest-order-method").value.trim(),
                 note: document.getElementById("rest-note").value.trim(),
                 active: true
@@ -812,6 +836,7 @@
                     showToast("✅ 新增餐廳成功！");
                 }
                 document.getElementById("restaurant-form").reset();
+                document.getElementById('eat-method-error').classList.add('hidden');
                 document.getElementById("rest-id").value = "";
                 document.getElementById("form-title").textContent = "➕ 新增餐廳";
                 document.getElementById("btn-submit-rest").textContent = "儲存餐廳";
@@ -826,7 +851,13 @@
             document.getElementById("form-title").textContent = "✏️ 編輯餐廳";
             document.getElementById("rest-id").value = rest.id;
             document.getElementById("rest-name").value = rest.name;
-            document.getElementById("rest-eat-method").value = rest.eatMethod;
+            
+            const methods = Array.isArray(rest.eatMethod) ? rest.eatMethod : [rest.eatMethod];
+            document.querySelectorAll('input[name="eatMethod"]').forEach(cb => {
+                cb.checked = methods.includes(cb.value);
+            });
+            document.getElementById('eat-method-error').classList.add('hidden');
+
             document.getElementById("rest-order-method").value = rest.orderMethod || "";
             document.getElementById("rest-note").value = rest.note || "";
             document.getElementById("btn-submit-rest").textContent = "更新餐廳";
@@ -843,6 +874,7 @@
 
         document.getElementById("btn-cancel-rest").onclick = () => {
             document.getElementById("restaurant-form").reset();
+            document.getElementById('eat-method-error').classList.add('hidden');
             document.getElementById("rest-id").value = "";
             document.getElementById("form-title").textContent = "➕ 新增餐廳";
             document.getElementById("btn-submit-rest").textContent = "儲存餐廳";
