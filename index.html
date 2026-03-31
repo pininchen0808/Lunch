@@ -20,10 +20,16 @@
         .wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #e63946; z-index: 10; }
         .wheel-label { position: absolute; top: 50%; left: 50%; transform-origin: 0 0; font-weight: bold; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); white-space: nowrap; font-size: 15px; }
 
-        /* 跑馬燈 (吃啥) */
+        /* 跑馬燈 (吃啥/喝啥) */
         .slot-machine { transition: all 0.3s; }
-        .slot-machine.spinning { animation: pulse 0.5s infinite alternate; color: #8C98A4; border-color: #8C98A4; }
+        .slot-machine.spinning { animation: pulse 0.5s infinite alternate; color: #8C98A4 !important; border-color: #8C98A4 !important; }
         @keyframes pulse { from { transform: scale(0.98); } to { transform: scale(1.02); } }
+
+        /* 自訂側邊欄卷軸樣式 */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #aaa; }
     </style>
 </head>
 <body class="bg-[#FDFBF7] text-[#3E4A59] font-sans antialiased min-h-screen">
@@ -36,84 +42,86 @@
     <!-- 頂部導覽列 -->
     <header class="bg-white shadow-sm sticky top-0 z-40 p-4 text-center">
         <h1 class="text-2xl font-bold text-[#E27D60] mb-3">🍱 中午要吃啥 🍱</h1>
-        <nav class="flex justify-center gap-2">
-            <button id="nav-home" class="font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white">抽籤主頁</button>
-            <button id="nav-admin" class="font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#E27D60] hover:text-white">餐廳管理</button>
+        <nav class="flex justify-center gap-2 flex-wrap">
+            <button id="nav-home" class="font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white">抽抽</button>
+            <button id="nav-admin" class="font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#E27D60] hover:text-white">吃啥</button>
+            <!-- 喝啥按鈕移到最右邊 -->
+            <button id="nav-drink" class="font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#41B3A3] hover:text-white">喝啥抽抽</button>
         </nav>
     </header>
 
-    <!-- 將主容器加寬至 max-w-5xl，讓左右排版有足夠空間 -->
+    <!-- 將主容器加寬至 max-w-5xl，給予充足空間 -->
     <main class="max-w-5xl mx-auto p-4 md:p-6">
         
         <!-- ==================== 第一頁：抽籤主頁 ==================== -->
-        <!-- 抽籤首頁維持在中央，寬度適中 (max-w-3xl) -->
-        <div id="home-view" class="max-w-3xl mx-auto space-y-6">
-            <!-- 1. 誰抽籤 -->
-            <div class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60]">
-                <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">1. 誰抽籤</h2>
-                <div class="flex flex-col sm:flex-row gap-3 mb-4">
-                    <input type="text" id="new-member-name" class="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]" placeholder="輸入新成員名稱...">
-                    <button id="btn-add-member" class="bg-[#E27D60] text-white px-4 py-2 rounded-md hover:bg-[#c9654a] transition-colors whitespace-nowrap">新增成員</button>
+        <!-- 改為左右 Flex 排版：左側 3/4 抽籤區，右側 1/4 紀錄區 -->
+        <div id="home-view" class="flex flex-col lg:flex-row gap-6 items-start w-full">
+            
+            <!-- 左側 3/4：主要抽籤流程 -->
+            <div class="w-full lg:w-3/4 space-y-6">
+                <!-- 1. 誰抽籤 -->
+                <div class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60]">
+                    <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">1. 誰抽籤</h2>
+                    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                        <input type="text" id="new-member-name" class="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E27D60]" placeholder="輸入新成員名稱...">
+                        <button id="btn-add-member" class="bg-[#E27D60] text-white px-4 py-2 rounded-md hover:bg-[#c9654a] transition-colors whitespace-nowrap">新增成員</button>
+                    </div>
+                    <div id="member-list" class="flex flex-wrap gap-2 mb-4">
+                        <!-- 成員標籤將由 JS 渲染 -->
+                    </div>
+                    <div class="text-center mt-2">
+                        <button id="btn-random-member" class="bg-[#85DCB8] text-[#2c5040] px-4 py-2 rounded-md hover:bg-[#6bb996] transition-colors font-bold">🎲 隨機抽一位</button>
+                    </div>
+                    <div id="drawer-result" class="hidden mt-4 text-center font-bold text-lg text-[#E27D60] bg-[#fff3e0] p-3 rounded-lg"></div>
                 </div>
-                <div id="member-list" class="flex flex-wrap gap-2 mb-4">
-                    <!-- 成員標籤將由 JS 渲染 -->
+
+                <!-- 2. 怎吃 -->
+                <div id="step2-card" class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60] opacity-40 pointer-events-none transition-opacity duration-300">
+                    <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">2. 怎吃</h2>
+                    <div class="wheel-container">
+                        <div class="wheel-pointer"></div>
+                        <div class="wheel" id="wheel"></div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button id="btn-spin-wheel" class="bg-[#E27D60] text-white px-8 py-3 text-lg font-bold rounded-md hover:bg-[#c9654a] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md">轉動輪盤</button>
+                    </div>
+                    <div id="eat-method-result" class="hidden mt-4 text-center font-bold text-xl text-[#E27D60] bg-[#fff3e0] p-3 rounded-lg"></div>
                 </div>
-                <div class="text-center mt-2">
-                    <button id="btn-random-member" class="bg-[#85DCB8] text-[#2c5040] px-4 py-2 rounded-md hover:bg-[#6bb996] transition-colors font-bold">🎲 隨機抽一位</button>
+
+                <!-- 3. 吃啥 -->
+                <div id="step3-card" class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60] opacity-40 pointer-events-none transition-opacity duration-300">
+                    <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">3. 吃啥</h2>
+                    <p id="candidate-info" class="text-center text-gray-500 font-bold mb-2"></p>
+                    
+                    <div id="slot-machine" class="slot-machine text-3xl font-bold text-center text-[#E27D60] bg-[#FDFBF7] p-6 rounded-lg border-4 border-dashed border-[#E8A87C] my-4 min-h-[100px] flex items-center justify-center">
+                        等待抽籤...
+                    </div>
+                    
+                    <div id="restaurant-detail" class="hidden text-center mb-4 text-base space-y-1 bg-gray-50 p-4 rounded-md border border-gray-200">
+                        <!-- 餐廳詳細資訊 -->
+                    </div>
+
+                    <div class="text-center mt-4 space-x-2">
+                        <button id="btn-draw-restaurant" class="bg-[#E27D60] text-white px-6 py-2 font-bold rounded-md hover:bg-[#c9654a] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md">🎰 開始抽餐廳</button>
+                        <button id="btn-redraw-restaurant" class="hidden bg-[#85DCB8] text-[#2c5040] px-6 py-2 font-bold rounded-md hover:bg-[#6bb996] transition-colors shadow-md">🔄 重新抽一次</button>
+                    </div>
                 </div>
-                <div id="drawer-result" class="hidden mt-4 text-center font-bold text-lg text-[#E27D60] bg-[#fff3e0] p-3 rounded-lg"></div>
             </div>
 
-            <!-- 2. 怎吃 -->
-            <div id="step2-card" class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60] opacity-40 pointer-events-none transition-opacity duration-300">
-                <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">2. 怎吃</h2>
-                <div class="wheel-container">
-                    <div class="wheel-pointer"></div>
-                    <div class="wheel" id="wheel"></div>
-                </div>
-                <div class="text-center mt-4">
-                    <button id="btn-spin-wheel" class="bg-[#E27D60] text-white px-8 py-3 text-lg font-bold rounded-md hover:bg-[#c9654a] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md">轉動輪盤</button>
-                </div>
-                <div id="eat-method-result" class="hidden mt-4 text-center font-bold text-xl text-[#E27D60] bg-[#fff3e0] p-3 rounded-lg"></div>
-            </div>
-
-            <!-- 3. 吃啥 -->
-            <div id="step3-card" class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60] opacity-40 pointer-events-none transition-opacity duration-300">
-                <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">3. 吃啥</h2>
-                <p id="candidate-info" class="text-center text-gray-500 font-bold mb-2"></p>
-                
-                <div id="slot-machine" class="slot-machine text-3xl font-bold text-center text-[#E27D60] bg-[#FDFBF7] p-6 rounded-lg border-4 border-dashed border-[#E8A87C] my-4 min-h-[100px] flex items-center justify-center">
-                    等待抽籤...
-                </div>
-                
-                <div id="restaurant-detail" class="hidden text-center mb-4 text-base space-y-1 bg-gray-50 p-4 rounded-md border border-gray-200">
-                    <!-- 餐廳詳細資訊 -->
-                </div>
-
-                <div class="text-center mt-4 space-x-2">
-                    <button id="btn-draw-restaurant" class="bg-[#E27D60] text-white px-6 py-2 font-bold rounded-md hover:bg-[#c9654a] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md">🎰 開始抽餐廳</button>
-                    <button id="btn-redraw-restaurant" class="hidden bg-[#85DCB8] text-[#2c5040] px-6 py-2 font-bold rounded-md hover:bg-[#6bb996] transition-colors shadow-md">🔄 重新抽一次</button>
-                </div>
-            </div>
-
-            <!-- 抽籤紀錄 -->
-            <div class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60]">
-                <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">📜 最近抽籤紀錄</h2>
-                <ul id="log-list" class="space-y-3">
+            <!-- 右側 1/4：抽籤紀錄側邊欄 -->
+            <div class="w-full lg:w-1/4 bg-white rounded-xl p-4 shadow-sm border-t-4 border-[#E27D60] lg:sticky lg:top-24 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar flex flex-col">
+                <h2 class="text-base font-bold mb-3 border-b-2 border-gray-100 pb-2 sticky top-0 bg-white z-10">📜 抽籤紀錄</h2>
+                <ul id="log-list" class="space-y-3 flex-1">
                     <!-- 紀錄將由 JS 渲染 -->
                 </ul>
             </div>
         </div>
 
-
         <!-- ==================== 第二頁：餐廳管理 ==================== -->
-        <!-- 使用一個單純的 div 控制顯示隱藏，內部再使用 flexbox 切割版面 -->
         <div id="admin-view" class="hidden">
-            <!-- md:flex 表示在平版以上尺寸會啟動左右並排 -->
             <div class="flex flex-col md:flex-row gap-6 items-start">
                 
                 <!-- 新增/編輯表單 (左側 1/3) -->
-                <!-- md:sticky 讓它只在電腦上吸頂，手機版不吸頂避免擋住畫面 -->
                 <div class="w-full md:w-1/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#E27D60] md:sticky md:top-24 z-10">
                     <h2 id="form-title" class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">➕ 新增餐廳</h2>
                     <form id="restaurant-form" class="space-y-4">
@@ -148,7 +156,7 @@
 
                         <div class="flex flex-col xl:flex-row gap-3 pt-2">
                             <button type="submit" id="btn-submit-rest" class="flex-1 bg-[#E27D60] text-white px-4 py-2 rounded-md hover:bg-[#c9654a] transition-colors font-bold whitespace-nowrap">儲存餐廳</button>
-                            <button type="button" id="btn-cancel-rest" class="hidden flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors font-bold whitespace-nowrap">取消</button>
+                            <button type="button" id="btn-cancel-rest" class="hidden flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors font-bold whitespace-nowrap">取消編輯</button>
                         </div>
                     </form>
                 </div>
@@ -168,6 +176,70 @@
                     </div>
                     <ul id="restaurant-list" class="space-y-3">
                         <!-- 列表將由 JS 渲染 -->
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== 第三頁：喝啥 (飲料頁) ==================== -->
+        <div id="drink-view" class="hidden space-y-6">
+            
+            <!-- 上半部：抽飲料系統 -->
+            <div class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#41B3A3]">
+                <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2 text-[#41B3A3]">🧋 喝啥</h2>
+                
+                <p id="drink-candidate-info" class="text-center text-gray-500 font-bold mb-2">準備開抽...</p>
+                
+                <div id="drink-slot-machine" class="slot-machine text-3xl font-bold text-center text-[#41B3A3] bg-[#FDFBF7] p-6 rounded-lg border-4 border-dashed border-[#85DCB8] my-4 min-h-[100px] flex items-center justify-center">
+                    等待抽籤...
+                </div>
+                
+                <div id="drink-detail" class="hidden text-center mb-4 text-base space-y-1 bg-gray-50 p-4 rounded-md border border-gray-200">
+                    <!-- 飲料詳細資訊 -->
+                </div>
+
+                <div class="text-center mt-4 space-x-2">
+                    <button id="btn-draw-drink" class="bg-[#41B3A3] text-white px-8 py-3 text-lg font-bold rounded-md hover:bg-[#349588] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md">🥤 開始抽飲料</button>
+                </div>
+            </div>
+
+            <!-- 下半部：飲料管理 (左右切版) -->
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                
+                <!-- 左側：新增/編輯飲料表單 -->
+                <div class="w-full md:w-1/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#41B3A3] md:sticky md:top-24 z-10">
+                    <h2 id="drink-form-title" class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">➕ 新增飲料店</h2>
+                    <form id="drink-form" class="space-y-4">
+                        <input type="hidden" id="drink-id">
+                        
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">飲料店名 (必填)</label>
+                            <input type="text" id="drink-name" required placeholder="例如：50嵐" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#41B3A3]">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">分店名</label>
+                            <input type="text" id="drink-branch" placeholder="例如：台北站前店" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#41B3A3]">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">備註</label>
+                            <input type="text" id="drink-note" placeholder="例如：滿250外送" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#41B3A3]">
+                        </div>
+
+                        <div class="flex flex-col xl:flex-row gap-3 pt-2">
+                            <button type="submit" id="btn-submit-drink" class="flex-1 bg-[#41B3A3] text-white px-4 py-2 rounded-md hover:bg-[#349588] transition-colors font-bold whitespace-nowrap">儲存飲料店</button>
+                            <button type="button" id="btn-cancel-drink" class="hidden flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors font-bold whitespace-nowrap">取消</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 右側：飲料列表 -->
+                <div class="w-full md:w-2/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#41B3A3]">
+                    <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">📋 飲料店列表</h2>
+                    <ul id="drink-list" class="space-y-3">
+                        <!-- 飲料列表將由 JS 渲染 -->
                     </ul>
                 </div>
 
@@ -195,24 +267,15 @@
             appId: "1:974891275410:web:fa73c543f969117a93824b",
             measurementId: "G-DDSG3MRKZZ"
         };
-        // 若是在特殊預覽環境中，自動套用環境參數
-        if (typeof __firebase_config !== 'undefined') {
-            firebaseConfig = JSON.parse(__firebase_config);
-        }
-
-        const app = initializeApp(firebaseConfig);
         
-        try {
-            const analytics = getAnalytics(app);
-        } catch (err) {
-            console.warn("Analytics 初始化略過:", err);
-        }
+        const app = initializeApp(firebaseConfig);
+        try { const analytics = getAnalytics(app); } catch (err) {}
 
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'lunch-drawer-app';
 
-        // 定義資料庫路徑
+        // 資料庫路徑 (新增 drinks collection)
         const getDbCol = (colName) => collection(db, 'artifacts', appId, 'public', 'data', colName);
         const getDbDoc = (colName, docId) => doc(db, 'artifacts', appId, 'public', 'data', colName, docId);
 
@@ -223,21 +286,22 @@
         const state = {
             members: [],
             restaurants: [],
+            drinks: [],
             logs: [],
             selectedDrawer: null,
             eatMethods: ["騎車買回來", "騎車出去吃", "走路出去吃", "訂公司午餐", "訂Uber Eats"],
             selectedEatMethod: null,
             candidateRestaurants: [],
-            selectedRestaurant: null
+            selectedRestaurant: null,
+            selectedDrink: null
         };
 
-        // UI 互動工具
+        // UI 工具
         function showToast(msg, isError = false) {
             const toast = document.createElement('div');
             toast.className = `fixed bottom-4 right-4 text-white px-6 py-4 rounded-lg shadow-lg z-50 transition-opacity duration-300 font-bold ${isError ? 'bg-red-600' : 'bg-green-500'}`;
             toast.textContent = msg;
             document.body.appendChild(toast);
-            
             const displayTime = isError ? 6000 : 3000;
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -256,18 +320,11 @@
         // ==========================================
         const initSystem = async () => {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
             } catch (err) {
                 console.error("驗證失敗:", err);
                 document.querySelector('#loading-overlay .spinner').style.display = 'none';
-                document.querySelector('#loading-overlay h2').innerHTML = `
-                    <span style="color:#e63946;">連線失敗！</span><br>
-                    <span style="font-size:16px; color:#8C98A4; font-weight:normal;">請至 Firebase 控制台確認是否已啟用「匿名登入 (Anonymous)」</span>
-                `;
+                document.querySelector('#loading-overlay h2').innerHTML = `<span style="color:#e63946;">連線失敗，請檢查網路或權限！</span>`;
             }
         };
 
@@ -276,7 +333,6 @@
                 currentUser = user;
                 document.getElementById('loading-overlay').style.opacity = '0';
                 setTimeout(() => document.getElementById('loading-overlay').classList.add('hidden'), 300);
-                
                 startDataListeners();
                 setupWheel();
             }
@@ -284,9 +340,7 @@
 
         const handleFirestoreError = (err, context) => {
             console.error(`[${context}] 讀取錯誤:`, err);
-            if (err.code === 'permission-denied') {
-                showToast(`❌ 同步失敗 (${context})：Firestore 規則拒絕存取，請至 Firebase 控制台更新 Rules！`, true);
-            }
+            if (err.code === 'permission-denied') showToast(`❌ 同步失敗 (${context})：Firestore 權限不足！`, true);
         };
 
         // ==========================================
@@ -299,17 +353,13 @@
             // 1. 監聽成員
             onSnapshot(getDbCol('members'), (snap) => {
                 state.members = [];
-                snap.forEach(d => {
-                    const data = d.data();
-                    if (data.active !== false) state.members.push({ id: d.id, ...data });
-                });
+                snap.forEach(d => { if (d.data().active !== false) state.members.push({ id: d.id, ...d.data() }); });
                 state.members.sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
                 
                 if (state.members.length === 0 && !hasInitializedDefaultMembers) {
                     hasInitializedDefaultMembers = true;
                     ['品', '柔', 'Yo'].forEach(name => {
-                        addDoc(getDbCol('members'), { name, active: true, createdAt: serverTimestamp() })
-                            .catch(e => console.warn("預設成員建立失敗 (可能是權限問題):", e));
+                        addDoc(getDbCol('members'), { name, active: true, createdAt: serverTimestamp() }).catch(e=>console.warn(e));
                     });
                 }
                 renderMembers();
@@ -318,33 +368,40 @@
             // 2. 監聽餐廳
             onSnapshot(getDbCol('restaurants'), (snap) => {
                 state.restaurants = [];
-                snap.forEach(d => {
-                    const data = d.data();
-                    if (data.active !== false) state.restaurants.push({ id: d.id, ...data });
-                });
+                snap.forEach(d => { if (d.data().active !== false) state.restaurants.push({ id: d.id, ...d.data() }); });
                 state.restaurants.sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
                 renderRestaurantList();
             }, (err) => handleFirestoreError(err, '餐廳'));
 
-            // 3. 監聽抽籤紀錄
+            // 3. 監聽飲料 
+            onSnapshot(getDbCol('drinks'), (snap) => {
+                state.drinks = [];
+                snap.forEach(d => { if (d.data().active !== false) state.drinks.push({ id: d.id, ...d.data() }); });
+                state.drinks.sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+                renderDrinkList();
+                updateDrinkDrawStatus(); 
+            }, (err) => handleFirestoreError(err, '飲料'));
+
+            // 4. 監聽抽籤紀錄
             onSnapshot(getDbCol('drawLogs'), (snap) => {
                 state.logs = [];
                 snap.forEach(d => state.logs.push({ id: d.id, ...d.data() }));
                 state.logs.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
-                const recentLogs = state.logs.slice(0, 20);
-                renderLogs(recentLogs);
+                renderLogs(state.logs.slice(0, 50)); // 取多一點因為現在側邊欄可滑動
             }, (err) => handleFirestoreError(err, '紀錄'));
         }
 
         // ==========================================
-        // 視圖切換邏輯
+        // 視圖切換邏輯 (支援三個頁籤)
         // ==========================================
         const views = {
             home: document.getElementById('home-view'),
+            drink: document.getElementById('drink-view'),
             admin: document.getElementById('admin-view')
         };
         const navBtns = {
             home: document.getElementById('nav-home'),
+            drink: document.getElementById('nav-drink'),
             admin: document.getElementById('nav-admin')
         };
 
@@ -352,192 +409,163 @@
             Object.keys(views).forEach(k => {
                 if (k === viewName) {
                     views[k].classList.remove('hidden');
-                    navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white";
+                    // 點亮當前標籤的顏色 (特別處理喝啥)
+                    if(k === 'home') {
+                        navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white";
+                        // 把 home-view 切換回 flex 顯示
+                        views[k].classList.add('flex');
+                    }
+                    else if(k === 'drink') navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#41B3A3] text-white";
+                    else navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white";
                 } else {
                     views[k].classList.add('hidden');
-                    navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#E27D60] hover:text-white";
+                    // 首頁隱藏時要移除 flex 避免破版
+                    if (k === 'home') views[k].classList.remove('flex');
+
+                    // 恢復其他標籤顏色
+                    if(k === 'drink') navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#41B3A3] hover:text-white";
+                    else navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#E27D60] hover:text-white";
                 }
             });
         }
         navBtns.home.onclick = () => switchView('home');
+        navBtns.drink.onclick = () => switchView('drink');
         navBtns.admin.onclick = () => switchView('admin');
 
         // ==========================================
-        // 區塊 1：誰抽籤
+        // 區塊：誰抽籤
         // ==========================================
         const DOM_members = document.getElementById("member-list");
         const DOM_newMember = document.getElementById("new-member-name");
-        const DOM_drawerResult = document.getElementById("drawer-result");
-        const DOM_step2 = document.getElementById("step2-card");
-
         function renderMembers() {
             DOM_members.innerHTML = "";
-            state.members.forEach(member => {
+            state.members.forEach(m => {
                 const btn = document.createElement("button");
-                btn.className = `px-4 py-2 rounded-full border transition-colors font-bold ${state.selectedDrawer === member.name ? 'bg-[#E27D60] text-white border-[#E27D60]' : 'bg-[#FDFBF7] text-[#3E4A59] border-[#E0E4E8] hover:bg-[#E8A87C] hover:text-white'}`;
-                btn.textContent = member.name;
-                btn.onclick = () => selectDrawer(member.name);
+                btn.className = `px-4 py-2 rounded-full border transition-colors font-bold ${state.selectedDrawer === m.name ? 'bg-[#E27D60] text-white border-[#E27D60]' : 'bg-[#FDFBF7] text-[#3E4A59] border-[#E0E4E8] hover:bg-[#E8A87C] hover:text-white'}`;
+                btn.textContent = m.name;
+                btn.onclick = () => {
+                    state.selectedDrawer = m.name;
+                    renderMembers();
+                    document.getElementById("drawer-result").textContent = `🙋‍♂️ 本次抽籤者：${m.name}`;
+                    document.getElementById("drawer-result").classList.remove("hidden");
+                    document.getElementById("step2-card").classList.remove("opacity-40", "pointer-events-none");
+                };
                 DOM_members.appendChild(btn);
             });
         }
-
-        async function addMember() {
-            if (!currentUser) return;
+        document.getElementById("btn-add-member").onclick = async () => {
             const name = DOM_newMember.value.trim();
-            if (!name) return;
-            if (state.members.some(m => m.name === name)) return showToast("已有同名成員！", true);
-
-            try {
-                await addDoc(getDbCol('members'), { name, active: true, createdAt: serverTimestamp() });
-                DOM_newMember.value = "";
-                showToast("✅ 新增成員成功！");
-            } catch (err) {
-                console.error("新增成員失敗:", err);
-                if (err.code === 'permission-denied') {
-                    showToast("❌ 儲存失敗：Firestore 權限不足，請檢查 Rules 設定！", true);
-                } else {
-                    showToast("❌ 儲存失敗", true);
-                }
-            }
-        }
-        document.getElementById("btn-add-member").onclick = addMember;
-        DOM_newMember.onkeypress = (e) => e.key === "Enter" && addMember();
-
+            if (!name || state.members.some(m => m.name === name)) return;
+            await addDoc(getDbCol('members'), { name, active: true, createdAt: serverTimestamp() });
+            DOM_newMember.value = "";
+        };
         document.getElementById("btn-random-member").onclick = () => {
             if(state.members.length === 0) return;
             const rnd = state.members[Math.floor(Math.random() * state.members.length)];
-            selectDrawer(rnd.name);
+            state.selectedDrawer = rnd.name;
+            renderMembers();
+            document.getElementById("drawer-result").textContent = `🙋‍♂️ 本次抽籤者：${rnd.name}`;
+            document.getElementById("drawer-result").classList.remove("hidden");
+            document.getElementById("step2-card").classList.remove("opacity-40", "pointer-events-none");
         };
 
-        function selectDrawer(name) {
-            state.selectedDrawer = name;
-            renderMembers();
-            DOM_drawerResult.textContent = `🙋‍♂️ 本次抽籤者：${name}`;
-            DOM_drawerResult.classList.remove("hidden");
-            DOM_step2.classList.remove("opacity-40", "pointer-events-none");
-        }
-
         // ==========================================
-        // 區塊 2：怎吃 (轉盤)
+        // 區塊：怎吃 (轉盤)
         // ==========================================
         const DOM_wheel = document.getElementById("wheel");
-        const DOM_eatResult = document.getElementById("eat-method-result");
-        const DOM_btnSpin = document.getElementById("btn-spin-wheel");
-        const DOM_step3 = document.getElementById("step3-card");
-        let currentRotation = 0;
-
         function setupWheel() {
             DOM_wheel.innerHTML = '';
             const slices = state.eatMethods.length;
             const degree = 360 / slices;
             const wheelColors = ["#E27D60", "#85DCB8", "#E8A87C", "#C38D9E", "#41B3A3"];
             let gradientParts = [];
-            
             state.eatMethods.forEach((method, i) => {
                 const start = i * degree;
                 const end = start + degree;
                 gradientParts.push(`${wheelColors[i]} ${start}deg ${end}deg`);
-                
                 const label = document.createElement("div");
                 label.className = "wheel-label";
-                const textAngle = start + (degree / 2);
-                label.style.transform = `rotate(${textAngle - 90}deg) translate(45px, -50%)`; 
+                label.style.transform = `rotate(${start + (degree / 2) - 90}deg) translate(45px, -50%)`; 
                 label.textContent = method;
                 DOM_wheel.appendChild(label);
             });
             DOM_wheel.style.background = `conic-gradient(${gradientParts.join(", ")})`;
         }
 
-        DOM_btnSpin.onclick = () => {
+        let currentRotation = 0;
+        document.getElementById("btn-spin-wheel").onclick = () => {
             if (!state.selectedDrawer) return showToast("請先在第一步選擇誰要抽籤！", true);
+            document.getElementById("btn-spin-wheel").disabled = true;
+            document.getElementById("eat-method-result").classList.add("hidden");
+            document.getElementById("step3-card").classList.add("opacity-40", "pointer-events-none");
             
-            DOM_btnSpin.disabled = true;
-            DOM_eatResult.classList.add("hidden");
-            DOM_step3.classList.add("opacity-40", "pointer-events-none");
-            
-            const slices = state.eatMethods.length;
-            const sliceDegree = 360 / slices;
-            const targetIndex = Math.floor(Math.random() * slices);
-            
+            const targetIndex = Math.floor(Math.random() * state.eatMethods.length);
+            const sliceDegree = 360 / state.eatMethods.length;
             const targetDegree = 360 - (targetIndex * sliceDegree) - (sliceDegree / 2);
-            const extraSpins = 360 * 5; 
-            currentRotation = currentRotation + extraSpins + (targetDegree - (currentRotation % 360));
+            currentRotation = currentRotation + (360 * 5) + (targetDegree - (currentRotation % 360));
             DOM_wheel.style.transform = `rotate(${currentRotation}deg)`;
 
             setTimeout(() => {
                 state.selectedEatMethod = state.eatMethods[targetIndex];
-                DOM_eatResult.textContent = `🛵 今天怎吃：${state.selectedEatMethod}`;
-                DOM_eatResult.classList.remove("hidden");
-                DOM_btnSpin.disabled = false;
-                
+                document.getElementById("eat-method-result").textContent = `🛵 今天怎吃：${state.selectedEatMethod}`;
+                document.getElementById("eat-method-result").classList.remove("hidden");
+                document.getElementById("btn-spin-wheel").disabled = false;
                 prepareSlotMachine();
             }, 3000);
         };
 
         // ==========================================
-        // 區塊 3：吃啥 (跑馬燈)
+        // 區塊：吃啥 (跑馬燈)
         // ==========================================
-        const DOM_slotMachine = document.getElementById("slot-machine");
-        const DOM_candidateInfo = document.getElementById("candidate-info");
-        const DOM_restDetail = document.getElementById("restaurant-detail");
-        const DOM_btnDrawRest = document.getElementById("btn-draw-restaurant");
-        const DOM_btnRedrawRest = document.getElementById("btn-redraw-restaurant");
-
         function prepareSlotMachine() {
-            DOM_step3.classList.remove("opacity-40", "pointer-events-none");
-            DOM_slotMachine.textContent = "等待抽籤...";
-            DOM_restDetail.classList.add("hidden");
-            DOM_btnRedrawRest.classList.add("hidden");
-            DOM_btnDrawRest.classList.remove("hidden");
-
+            document.getElementById("step3-card").classList.remove("opacity-40", "pointer-events-none");
+            document.getElementById("slot-machine").textContent = "等待抽籤...";
+            document.getElementById("restaurant-detail").classList.add("hidden");
+            document.getElementById("btn-redraw-restaurant").classList.add("hidden");
+            document.getElementById("btn-draw-restaurant").classList.remove("hidden");
             state.candidateRestaurants = state.restaurants.filter(r => r.eatMethod === state.selectedEatMethod);
-
+            
+            const btn = document.getElementById("btn-draw-restaurant");
             if (state.candidateRestaurants.length === 0) {
-                DOM_candidateInfo.textContent = `⚠️ 哭啊！目前「${state.selectedEatMethod}」沒有任何餐廳資料，請先到管理頁新增。`;
-                DOM_btnDrawRest.disabled = true;
+                document.getElementById("candidate-info").textContent = `⚠️ 目前沒有符合的餐廳。`;
+                btn.disabled = true;
             } else {
-                DOM_candidateInfo.textContent = `🎯 共有 ${state.candidateRestaurants.length} 家「${state.selectedEatMethod}」餐廳準備開抽！`;
-                DOM_btnDrawRest.disabled = false;
+                document.getElementById("candidate-info").textContent = `🎯 共有 ${state.candidateRestaurants.length} 家候選餐廳！`;
+                btn.disabled = false;
             }
         }
 
         function runSlotMachine() {
             if (state.candidateRestaurants.length === 0) return;
-            
-            DOM_btnDrawRest.disabled = true;
-            DOM_btnRedrawRest.disabled = true;
-            DOM_slotMachine.classList.add("spinning");
-            DOM_restDetail.classList.add("hidden");
+            document.getElementById("btn-draw-restaurant").disabled = true;
+            document.getElementById("btn-redraw-restaurant").disabled = true;
+            document.getElementById("slot-machine").classList.add("spinning");
+            document.getElementById("restaurant-detail").classList.add("hidden");
 
             let spins = 0;
-            const maxSpins = 25;
-            
             const interval = setInterval(() => {
-                const randomIndex = Math.floor(Math.random() * state.candidateRestaurants.length);
-                DOM_slotMachine.textContent = state.candidateRestaurants[randomIndex].name;
+                const ri = Math.floor(Math.random() * state.candidateRestaurants.length);
+                document.getElementById("slot-machine").textContent = state.candidateRestaurants[ri].name;
                 spins++;
-
-                if (spins >= maxSpins) {
+                if (spins >= 25) {
                     clearInterval(interval);
-                    finishSlotMachine(randomIndex);
+                    finishSlotMachine(ri);
                 }
             }, 80);
         }
 
         async function finishSlotMachine(winnerIndex) {
-            DOM_slotMachine.classList.remove("spinning");
+            document.getElementById("slot-machine").classList.remove("spinning");
             state.selectedRestaurant = state.candidateRestaurants[winnerIndex];
-            
-            DOM_slotMachine.textContent = `🎉 ${state.selectedRestaurant.name} 🎉`;
-            DOM_restDetail.innerHTML = `
+            document.getElementById("slot-machine").textContent = `🎉 ${state.selectedRestaurant.name} 🎉`;
+            document.getElementById("restaurant-detail").innerHTML = `
                 <p><span class="font-bold text-gray-700">訂餐方式：</span> ${state.selectedRestaurant.orderMethod || '無'}</p>
                 <p><span class="font-bold text-gray-700">備註：</span> ${state.selectedRestaurant.note || '無'}</p>
             `;
-            DOM_restDetail.classList.remove("hidden");
-            
-            DOM_btnDrawRest.classList.add("hidden");
-            DOM_btnRedrawRest.classList.remove("hidden");
-            DOM_btnRedrawRest.disabled = false;
+            document.getElementById("restaurant-detail").classList.remove("hidden");
+            document.getElementById("btn-draw-restaurant").classList.add("hidden");
+            document.getElementById("btn-redraw-restaurant").classList.remove("hidden");
+            document.getElementById("btn-redraw-restaurant").disabled = false;
 
             try {
                 await addDoc(getDbCol("drawLogs"), {
@@ -545,41 +573,44 @@
                     eatMethod: state.selectedEatMethod,
                     restaurantId: state.selectedRestaurant.id,
                     restaurantName: state.selectedRestaurant.name,
-                    createdAt: serverTimestamp(),
-                    memberListSnapshot: state.members.map(m => m.name),
-                    candidateRestaurantCount: state.candidateRestaurants.length
+                    createdAt: serverTimestamp()
                 });
-            } catch (err) {
-                console.error("寫入紀錄失敗:", err);
-                if (err.code === 'permission-denied') {
-                    showToast("❌ 紀錄儲存失敗：Firestore 權限不足！", true);
-                }
-            }
+            } catch (err) {}
         }
-        DOM_btnDrawRest.onclick = runSlotMachine;
-        DOM_btnRedrawRest.onclick = runSlotMachine;
+        document.getElementById("btn-draw-restaurant").onclick = runSlotMachine;
+        document.getElementById("btn-redraw-restaurant").onclick = runSlotMachine;
 
         // ==========================================
-        // 區塊 4：抽籤紀錄渲染
+        // 右側側邊欄：小紀錄渲染 (專為 1/4 窄寬度設計)
         // ==========================================
-        const DOM_logs = document.getElementById("log-list");
         function renderLogs(recentLogs) {
+            const DOM_logs = document.getElementById("log-list");
             DOM_logs.innerHTML = "";
+            
+            if (recentLogs.length === 0) {
+                DOM_logs.innerHTML = "<p class='text-sm text-gray-400 text-center py-4'>尚無紀錄</p>";
+                return;
+            }
+
             recentLogs.forEach(data => {
                 const li = document.createElement("li");
-                li.className = "flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg";
+                // 改用 flex-col 垂直排列，並縮小 padding 以適應側邊欄
+                li.className = "flex flex-col bg-gray-50 border border-gray-200 p-3 rounded-lg";
                 
                 let dateObj = new Date();
                 if (data.createdAt?.toDate) dateObj = data.createdAt.toDate();
                 else if (data.createdAt?.toMillis) dateObj = new Date(data.createdAt.toMillis());
 
+                const isDrink = data.eatMethod === "喝飲料";
+                
                 li.innerHTML = `
-                    <div>
-                        <h4 class="font-bold text-lg text-[#3E4A59]">${data.restaurantName} <span class="text-sm font-normal text-gray-500">(${data.eatMethod})</span></h4>
-                        <span class="text-sm text-gray-500">🧑 抽籤者：${data.drawerName}</span>
+                    <div class="mb-1">
+                        <h4 class="font-bold text-base text-[#3E4A59] leading-tight">${data.restaurantName}</h4>
+                        <span class="text-xs font-normal ${isDrink ? 'text-[#41B3A3]' : 'text-gray-500'}">(${data.eatMethod || '無'})</span>
                     </div>
-                    <div class="text-xs text-gray-400 text-right whitespace-nowrap ml-2">
-                        🕒 ${formatDate(dateObj)}
+                    <div class="flex justify-between items-end mt-1">
+                        <span class="text-xs text-gray-500 font-bold">🧑 ${data.drawerName || '未指定'}</span>
+                        <span class="text-[10px] text-gray-400 font-mono tracking-tighter">🕒 ${formatDate(dateObj)}</span>
                     </div>
                 `;
                 DOM_logs.appendChild(li);
@@ -589,14 +620,10 @@
         // ==========================================
         // 餐廳管理功能
         // ==========================================
-        const formRest = document.getElementById("restaurant-form");
-        const DOM_restList = document.getElementById("restaurant-list");
-        const filterSelect = document.getElementById("filter-eat-method");
-
         function renderRestaurantList() {
-            const filterVal = filterSelect.value;
+            const DOM_restList = document.getElementById("restaurant-list");
+            const filterVal = document.getElementById("filter-eat-method").value;
             DOM_restList.innerHTML = "";
-            
             let filtered = state.restaurants;
             if (filterVal !== "all") filtered = state.restaurants.filter(r => r.eatMethod === filterVal);
 
@@ -604,7 +631,6 @@
                 DOM_restList.innerHTML = "<p class='text-center py-6 text-gray-400'>目前沒有符合的餐廳資料。</p>";
                 return;
             }
-
             filtered.forEach(rest => {
                 const li = document.createElement("li");
                 li.className = "flex flex-col sm:flex-row justify-between sm:items-center bg-gray-50 border border-gray-200 p-4 rounded-lg gap-3";
@@ -618,27 +644,17 @@
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button class="btn-edit bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 transition-colors" data-id="${rest.id}">編輯</button>
-                        <button class="btn-delete bg-[#e63946] text-white px-3 py-1 rounded-md hover:bg-red-700 transition-colors" data-id="${rest.id}">刪除</button>
+                        <button class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300" onclick="editRestaurant('${rest.id}')">編輯</button>
+                        <button class="bg-[#e63946] text-white px-3 py-1 rounded-md hover:bg-red-700" onclick="deleteRestaurant('${rest.id}')">刪除</button>
                     </div>
                 `;
                 DOM_restList.appendChild(li);
             });
-
-            document.querySelectorAll(".btn-edit").forEach(btn => {
-                btn.onclick = () => editRestaurant(btn.dataset.id);
-            });
-            document.querySelectorAll(".btn-delete").forEach(btn => {
-                btn.onclick = () => deleteRestaurant(btn.dataset.id);
-            });
         }
+        document.getElementById("filter-eat-method").onchange = renderRestaurantList;
 
-        filterSelect.onchange = renderRestaurantList;
-
-        formRest.onsubmit = async (e) => {
+        document.getElementById("restaurant-form").onsubmit = async (e) => {
             e.preventDefault();
-            if (!currentUser) return;
-
             const id = document.getElementById("rest-id").value;
             const data = {
                 name: document.getElementById("rest-name").value.trim(),
@@ -647,10 +663,7 @@
                 note: document.getElementById("rest-note").value.trim(),
                 active: true
             };
-
-            const submitBtn = document.getElementById("btn-submit-rest");
-            submitBtn.disabled = true;
-
+            document.getElementById("btn-submit-rest").disabled = true;
             try {
                 if (id) {
                     data.updatedAt = serverTimestamp();
@@ -661,74 +674,198 @@
                     await addDoc(getDbCol("restaurants"), data);
                     showToast("✅ 新增餐廳成功！");
                 }
-                resetRestForm();
-            } catch (error) {
-                console.error("儲存失敗:", error);
-                if (error.code === 'permission-denied') {
-                    showToast("❌ 儲存失敗：Firestore 權限不足，請檢查 Rules 設定！", true);
-                } else {
-                    showToast("❌ 儲存失敗", true);
-                }
-            } finally {
-                submitBtn.disabled = false;
-            }
+                document.getElementById("restaurant-form").reset();
+                document.getElementById("rest-id").value = "";
+                document.getElementById("form-title").textContent = "➕ 新增餐廳";
+                document.getElementById("btn-submit-rest").textContent = "儲存餐廳";
+                document.getElementById("btn-cancel-rest").classList.add("hidden");
+            } catch (error) { showToast("❌ 儲存失敗", true); }
+            document.getElementById("btn-submit-rest").disabled = false;
         };
 
-        function editRestaurant(id) {
+        window.editRestaurant = (id) => {
             const rest = state.restaurants.find(r => r.id === id);
             if (!rest) return;
-
             document.getElementById("form-title").textContent = "✏️ 編輯餐廳";
             document.getElementById("rest-id").value = rest.id;
             document.getElementById("rest-name").value = rest.name;
             document.getElementById("rest-eat-method").value = rest.eatMethod;
             document.getElementById("rest-order-method").value = rest.orderMethod || "";
             document.getElementById("rest-note").value = rest.note || "";
-            
             document.getElementById("btn-submit-rest").textContent = "更新餐廳";
             document.getElementById("btn-cancel-rest").classList.remove("hidden");
             window.scrollTo({ top: 0, behavior: "smooth" });
-        }
+        };
 
-        async function deleteRestaurant(id) {
-            const card = document.createElement('div');
-            card.className = "fixed top-0 left-0 w-full h-full bg-black/50 z-50 flex items-center justify-center";
-            card.innerHTML = `
-                <div class="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full text-center">
-                    <h3 class="text-xl font-bold mb-4">確定要刪除這家餐廳嗎？</h3>
-                    <div class="flex gap-4 justify-center">
-                        <button id="del-cancel" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">取消</button>
-                        <button id="del-confirm" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">確定刪除</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(card);
+        window.deleteRestaurant = async (id) => {
+            if(confirm("確定刪除這家餐廳嗎？")) {
+                await updateDoc(getDbDoc("restaurants", id), { active: false });
+                showToast("🗑️ 已刪除餐廳");
+            }
+        };
 
-            document.getElementById("del-cancel").onclick = () => card.remove();
-            document.getElementById("del-confirm").onclick = async () => {
-                card.remove();
-                try {
-                    await updateDoc(getDbDoc("restaurants", id), { active: false });
-                    showToast("🗑️ 已刪除餐廳");
-                } catch (error) {
-                    console.error("刪除失敗:", error);
-                    if (error.code === 'permission-denied') {
-                        showToast("❌ 刪除失敗：Firestore 權限不足！", true);
-                    } else {
-                        showToast("❌ 刪除失敗", true);
-                    }
-                }
-            };
-        }
-
-        function resetRestForm() {
-            formRest.reset();
+        document.getElementById("btn-cancel-rest").onclick = () => {
+            document.getElementById("restaurant-form").reset();
             document.getElementById("rest-id").value = "";
             document.getElementById("form-title").textContent = "➕ 新增餐廳";
             document.getElementById("btn-submit-rest").textContent = "儲存餐廳";
             document.getElementById("btn-cancel-rest").classList.add("hidden");
+        };
+
+        // ==========================================
+        // 喝啥 (飲料管理與抽籤)
+        // ==========================================
+        
+        // 渲染飲料列表
+        function renderDrinkList() {
+            const DOM_drinkList = document.getElementById("drink-list");
+            DOM_drinkList.innerHTML = "";
+
+            if (state.drinks.length === 0) {
+                DOM_drinkList.innerHTML = "<p class='text-center py-6 text-gray-400'>目前沒有飲料店資料，趕快新增一家吧！</p>";
+                return;
+            }
+
+            state.drinks.forEach(drink => {
+                const li = document.createElement("li");
+                li.className = "flex flex-col sm:flex-row justify-between sm:items-center bg-gray-50 border border-gray-200 p-4 rounded-lg gap-3";
+                li.innerHTML = `
+                    <div class="flex-1">
+                        <h4 class="font-bold text-lg text-[#3E4A59]">${drink.name} <span class="text-sm text-[#41B3A3] font-normal">${drink.branch ? `(${drink.branch})` : ''}</span></h4>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            ${drink.note ? `<span class="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600 border border-gray-200">📝 ${drink.note}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300" onclick="editDrink('${drink.id}')">編輯</button>
+                        <button class="bg-[#e63946] text-white px-3 py-1 rounded-md hover:bg-red-700" onclick="deleteDrink('${drink.id}')">刪除</button>
+                    </div>
+                `;
+                DOM_drinkList.appendChild(li);
+            });
         }
-        document.getElementById("btn-cancel-rest").onclick = resetRestForm;
+
+        // 飲料表單送出
+        document.getElementById("drink-form").onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("drink-id").value;
+            const data = {
+                name: document.getElementById("drink-name").value.trim(),
+                branch: document.getElementById("drink-branch").value.trim(),
+                note: document.getElementById("drink-note").value.trim(),
+                active: true
+            };
+            
+            document.getElementById("btn-submit-drink").disabled = true;
+            try {
+                if (id) {
+                    data.updatedAt = serverTimestamp();
+                    await updateDoc(getDbDoc("drinks", id), data);
+                    showToast("✅ 更新飲料店成功！");
+                } else {
+                    data.createdAt = serverTimestamp();
+                    await addDoc(getDbCol("drinks"), data);
+                    showToast("✅ 新增飲料店成功！");
+                }
+                resetDrinkForm();
+            } catch (error) { showToast("❌ 儲存失敗", true); }
+            document.getElementById("btn-submit-drink").disabled = false;
+        };
+
+        window.editDrink = (id) => {
+            const drink = state.drinks.find(d => d.id === id);
+            if (!drink) return;
+            document.getElementById("drink-form-title").textContent = "✏️ 編輯飲料店";
+            document.getElementById("drink-id").value = drink.id;
+            document.getElementById("drink-name").value = drink.name;
+            document.getElementById("drink-branch").value = drink.branch || "";
+            document.getElementById("drink-note").value = drink.note || "";
+            
+            document.getElementById("btn-submit-drink").textContent = "更新飲料店";
+            document.getElementById("btn-cancel-drink").classList.remove("hidden");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+
+        window.deleteDrink = async (id) => {
+            if(confirm("確定刪除這家飲料店嗎？")) {
+                await updateDoc(getDbDoc("drinks", id), { active: false });
+                showToast("🗑️ 已刪除飲料店");
+            }
+        };
+
+        function resetDrinkForm() {
+            document.getElementById("drink-form").reset();
+            document.getElementById("drink-id").value = "";
+            document.getElementById("drink-form-title").textContent = "➕ 新增飲料店";
+            document.getElementById("btn-submit-drink").textContent = "儲存飲料店";
+            document.getElementById("btn-cancel-drink").classList.add("hidden");
+        }
+        document.getElementById("btn-cancel-drink").onclick = resetDrinkForm;
+
+        // --- 飲料抽籤邏輯 ---
+        function updateDrinkDrawStatus() {
+            const btn = document.getElementById("btn-draw-drink");
+            const info = document.getElementById("drink-candidate-info");
+            if (state.drinks.length === 0) {
+                info.textContent = `⚠️ 目前沒有飲料店可抽，請先在下方新增！`;
+                btn.disabled = true;
+            } else {
+                info.textContent = `🎯 共有 ${state.drinks.length} 家飲料店準備開抽！`;
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById("btn-draw-drink").onclick = () => {
+            if (state.drinks.length === 0) return;
+            
+            const btn = document.getElementById("btn-draw-drink");
+            const slot = document.getElementById("drink-slot-machine");
+            const detail = document.getElementById("drink-detail");
+            
+            btn.disabled = true;
+            btn.textContent = "🔄 抽籤中...";
+            slot.classList.add("spinning");
+            detail.classList.add("hidden");
+
+            let spins = 0;
+            const interval = setInterval(() => {
+                const ri = Math.floor(Math.random() * state.drinks.length);
+                const currentDrink = state.drinks[ri];
+                slot.textContent = `${currentDrink.name} ${currentDrink.branch ? '('+currentDrink.branch+')' : ''}`;
+                spins++;
+
+                if (spins >= 25) {
+                    clearInterval(interval);
+                    finishDrinkDraw(ri);
+                }
+            }, 80);
+        };
+
+        async function finishDrinkDraw(winnerIndex) {
+            const slot = document.getElementById("drink-slot-machine");
+            const detail = document.getElementById("drink-detail");
+            const btn = document.getElementById("btn-draw-drink");
+            
+            slot.classList.remove("spinning");
+            state.selectedDrink = state.drinks[winnerIndex];
+            
+            slot.innerHTML = `🎉 ${state.selectedDrink.name} <span class="text-xl">(${state.selectedDrink.branch || '無分店'})</span> 🎉`;
+            detail.innerHTML = `<p><span class="font-bold text-gray-700">備註：</span> ${state.selectedDrink.note || '無'}</p>`;
+            detail.classList.remove("hidden");
+            
+            btn.disabled = false;
+            btn.textContent = "🔄 重新抽一次飲料";
+
+            try {
+                await addDoc(getDbCol("drawLogs"), {
+                    drawerName: state.selectedDrawer || "大家", 
+                    eatMethod: "喝飲料", 
+                    restaurantId: state.selectedDrink.id,
+                    restaurantName: `${state.selectedDrink.name} ${state.selectedDrink.branch ? '('+state.selectedDrink.branch+')' : ''}`,
+                    createdAt: serverTimestamp()
+                });
+            } catch (err) {}
+        }
 
         // 啟動系統
         initSystem();
