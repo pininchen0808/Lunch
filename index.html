@@ -1221,48 +1221,71 @@
                 return;
             }
 
-            // --- 計算互相抵銷後的總結算 ---
-            const pairwise = {};
+            // --- 計算最佳化總結算 (最低轉帳次數) ---
+            const balances = {};
+            state.members.forEach(m => balances[m.name] = 0);
+            
+            // 如果有不在 member 名單裡的舊資料，也先幫他們初始化為 0
+            state.bills.forEach(bill => {
+                if (balances[bill.payer] === undefined) balances[bill.payer] = 0;
+                bill.participants.forEach(p => {
+                    if (balances[p] === undefined) balances[p] = 0;
+                });
+            });
+
+            // 計算每個人的淨收支
             state.bills.forEach(bill => {
                 const payer = bill.payer;
                 bill.participants.forEach(p => {
                     if (p !== payer) {
-                        if (!pairwise[p]) pairwise[p] = {};
-                        pairwise[p][payer] = (pairwise[p][payer] || 0) + bill.splitAmount;
+                        balances[p] -= bill.splitAmount; // 欠人錢 (-)
+                        balances[payer] += bill.splitAmount; // 別人欠他 (+)
                     }
                 });
             });
+
+            // 分離債務人與債權人
+            let debtors = [];
+            let creditors = [];
+            Object.keys(balances).forEach(name => {
+                if (balances[name] < 0) debtors.push({ name, amount: -balances[name] });
+                else if (balances[name] > 0) creditors.push({ name, amount: balances[name] });
+            });
+
+            // 排序以優化大額抵銷 (大額欠款優先給大額代墊)
+            debtors.sort((a, b) => b.amount - a.amount);
+            creditors.sort((a, b) => b.amount - a.amount);
 
             const netDebts = [];
-            const processed = new Set();
-            Object.keys(pairwise).forEach(m1 => {
-                Object.keys(pairwise[m1]).forEach(m2 => {
-                    const key1 = `${m1}-${m2}`;
-                    const key2 = `${m2}-${m1}`;
-                    if (processed.has(key1)) return;
-
-                    const owed1To2 = pairwise[m1][m2] || 0;
-                    const owed2To1 = (pairwise[m2] && pairwise[m2][m1]) ? pairwise[m2][m1] : 0;
-
-                    const net = owed1To2 - owed2To1;
-                    if (net > 0) {
-                        netDebts.push({ debtor: m1, creditor: m2, amount: net });
-                    } else if (net < 0) {
-                        netDebts.push({ debtor: m2, creditor: m1, amount: -net });
-                    }
-
-                    processed.add(key1);
-                    processed.add(key2);
-                });
-            });
+            let i = 0, j = 0;
+            while (i < debtors.length && j < creditors.length) {
+                const debtor = debtors[i];
+                const creditor = creditors[j];
+                const transferAmount = Math.min(debtor.amount, creditor.amount);
+                
+                if (transferAmount > 0) {
+                    netDebts.push({ debtor: debtor.name, creditor: creditor.name, amount: transferAmount });
+                }
+                
+                debtor.amount -= transferAmount;
+                creditor.amount -= transferAmount;
+                
+                if (debtor.amount === 0) i++;
+                if (creditor.amount === 0) j++;
+            }
 
             if (netDebts.length === 0) {
                 DOM_splitSummary.innerHTML = "<p class='text-gray-400'>結算結果互不相欠！</p>";
             } else {
                 netDebts.forEach(debt => {
                     const el = document.createElement("div");
-                    el.className = "bg-[#F3E8FF] border border-[#C4B5FD] px-4 py-3 rounded-lg text-sm shadow-sm flex items-center gap-2";
-                    el.innerHTML = `<span class="font-bold text-[#3E4A59]">${debt.debtor}</span> ➡️ 給 <span class="font-bold text-[#3E4A59]">${debt.creditor}</span>：<span class="font-bold text-red-500 text-lg">$${debt.amount}</span>`;
+                    el.className = "bg-[#F3E8FF] border border-[#C4B5FD] px-4 py-3 rounded-lg text-sm shadow-sm flex items-center justify-between w-full lg:w-auto gap-4";
+                    el.innerHTML = `
+                        <div>
+                            <span class="font-bold text-[#3E4A59]">${debt.debtor}</span> ➡️ 給 <span class="font-bold text-[#3E4A59]">${debt.creditor}</span>：<span class="font-bold text-red-500 text-lg">$${debt.amount}</span>
+                        </div>
+                        <button class="bg-[#8B5CF6] text-white px-3 py-1 rounded hover:bg-[#7C3AED] transition-colors text-xs font-bold whitespace-nowrap" onclick="settleDebt('${debt.debtor}', '${debt.creditor}', ${debt.amount})">已結清</button>
+                    `;
                     DOM_splitSummary.appendChild(el);
                 });
             }
@@ -1276,6 +1299,9 @@
                 if (bill.createdAt?.toDate) dateObj = bill.createdAt.toDate();
                 else if (bill.createdAt?.toMillis) dateObj = new Date(bill.createdAt.toMillis());
 
+                // 結清的紀錄換個綠色顯示會比較清楚
+                const isSettlement = bill.title === "✅ 結清轉帳";
+
                 const owesList = bill.participants
                     .filter(p => p !== bill.payer) 
                     .map(p => `<span class="bg-white border border-gray-200 px-2 py-1 rounded text-sm shadow-sm inline-block mb-1 mr-1 text-gray-700"><b class="text-[#8B5CF6]">${p}</b> 應給 ${bill.payer} <span class="font-bold text-red-500">$${bill.splitAmount}</span></span>`)
@@ -1286,21 +1312,40 @@
                 li.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
-                            <h4 class="font-bold text-lg text-[#3E4A59]">${bill.title} <span class="text-sm font-bold text-[#8B5CF6] ml-2">總計: $${bill.amount}</span></h4>
+                            <h4 class="font-bold text-lg ${isSettlement ? 'text-green-600' : 'text-[#3E4A59]'}">${bill.title} <span class="text-sm font-bold text-[#8B5CF6] ml-2">總計: $${bill.amount}</span></h4>
                             <p class="text-xs text-gray-500 mt-1">🕒 ${formatDate(dateObj)} ． 代墊者: <span class="font-bold">${bill.payer}</span> ． 每人分攤: $${bill.splitAmount}</p>
                         </div>
-                        <button class="bg-gray-200 text-gray-500 px-2 py-1 rounded hover:bg-red-500 hover:text-white transition-colors text-xs" onclick="deleteBill('${bill.id}')">結清(刪除)</button>
+                        <button class="bg-gray-200 text-gray-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition-colors text-xs font-bold" onclick="deleteBill('${bill.id}')">刪除</button>
                     </div>
-                    ${owesHtml}
+                    ${!isSettlement ? owesHtml : ''}
                 `;
                 DOM_splitList.appendChild(li);
             });
         }
 
         window.deleteBill = async (id) => {
-            if(confirm("確定刪除這筆分帳紀錄嗎？（代表大家都結清給代墊者了喔）")) {
+            if(confirm("確定刪除這筆分帳紀錄嗎？")) {
                 await updateDoc(getDbDoc("bills", id), { active: false });
-                showToast("🗑️ 已結清並刪除分帳紀錄");
+                showToast("🗑️ 已刪除分帳紀錄");
+            }
+        };
+
+        window.settleDebt = async (debtor, creditor, amount) => {
+            if(confirm(`確定 ${debtor} 已經轉帳給 ${creditor} $${amount} 了嗎？\n(這將會新增一筆對沖的結清紀錄)`)) {
+                try {
+                    await addDoc(getDbCol("bills"), {
+                        title: "✅ 結清轉帳",
+                        amount: parseInt(amount, 10),
+                        payer: debtor, // 欠款者把錢拿出來
+                        participants: [creditor], // 債權人收到錢
+                        splitAmount: parseInt(amount, 10),
+                        createdAt: serverTimestamp(),
+                        active: true
+                    });
+                    showToast("✅ 結清成功！");
+                } catch (error) { 
+                    showToast("❌ 結清失敗，請檢查權限", true); 
+                }
             }
         };
 
