@@ -316,11 +316,22 @@
                     </form>
                 </div>
 
-                <div class="w-full md:w-2/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#8B5CF6]">
-                    <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">🧾 分帳紀錄 (大家欠誰錢)</h2>
-                    <ul id="split-list" class="space-y-3">
-                        <!-- JS 渲染 -->
-                    </ul>
+                <div class="w-full md:w-2/3 flex flex-col gap-6">
+                    <!-- 新增總結算區塊 -->
+                    <div class="bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#8B5CF6]">
+                        <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">📊 總結算 (最後誰要給誰)</h2>
+                        <div id="split-summary" class="flex flex-wrap gap-3">
+                            <!-- JS 渲染抵銷後的總結算 -->
+                        </div>
+                    </div>
+
+                    <!-- 分帳詳細紀錄 -->
+                    <div class="bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#8B5CF6]">
+                        <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">🧾 詳細分帳紀錄</h2>
+                        <ul id="split-list" class="space-y-3">
+                            <!-- JS 渲染 -->
+                        </ul>
+                    </div>
                 </div>
 
             </div>
@@ -1200,13 +1211,63 @@
 
         function renderBills() {
             const DOM_splitList = document.getElementById("split-list");
+            const DOM_splitSummary = document.getElementById("split-summary");
             DOM_splitList.innerHTML = "";
+            DOM_splitSummary.innerHTML = "";
 
             if (state.bills.length === 0) {
                 DOM_splitList.innerHTML = "<p class='text-center py-6 text-gray-400'>目前沒有分帳紀錄，太棒了！大家都結清了！</p>";
+                DOM_splitSummary.innerHTML = "<p class='text-gray-400'>結算結果互不相欠！</p>";
                 return;
             }
 
+            // --- 計算互相抵銷後的總結算 ---
+            const pairwise = {};
+            state.bills.forEach(bill => {
+                const payer = bill.payer;
+                bill.participants.forEach(p => {
+                    if (p !== payer) {
+                        if (!pairwise[p]) pairwise[p] = {};
+                        pairwise[p][payer] = (pairwise[p][payer] || 0) + bill.splitAmount;
+                    }
+                });
+            });
+
+            const netDebts = [];
+            const processed = new Set();
+            Object.keys(pairwise).forEach(m1 => {
+                Object.keys(pairwise[m1]).forEach(m2 => {
+                    const key1 = `${m1}-${m2}`;
+                    const key2 = `${m2}-${m1}`;
+                    if (processed.has(key1)) return;
+
+                    const owed1To2 = pairwise[m1][m2] || 0;
+                    const owed2To1 = (pairwise[m2] && pairwise[m2][m1]) ? pairwise[m2][m1] : 0;
+
+                    const net = owed1To2 - owed2To1;
+                    if (net > 0) {
+                        netDebts.push({ debtor: m1, creditor: m2, amount: net });
+                    } else if (net < 0) {
+                        netDebts.push({ debtor: m2, creditor: m1, amount: -net });
+                    }
+
+                    processed.add(key1);
+                    processed.add(key2);
+                });
+            });
+
+            if (netDebts.length === 0) {
+                DOM_splitSummary.innerHTML = "<p class='text-gray-400'>結算結果互不相欠！</p>";
+            } else {
+                netDebts.forEach(debt => {
+                    const el = document.createElement("div");
+                    el.className = "bg-[#F3E8FF] border border-[#C4B5FD] px-4 py-3 rounded-lg text-sm shadow-sm flex items-center gap-2";
+                    el.innerHTML = `<span class="font-bold text-[#3E4A59]">${debt.debtor}</span> ➡️ 給 <span class="font-bold text-[#3E4A59]">${debt.creditor}</span>：<span class="font-bold text-red-500 text-lg">$${debt.amount}</span>`;
+                    DOM_splitSummary.appendChild(el);
+                });
+            }
+
+            // --- 渲染詳細分帳紀錄 ---
             state.bills.forEach(bill => {
                 const li = document.createElement("li");
                 li.className = "flex flex-col bg-gray-50 border border-gray-200 p-4 rounded-lg gap-2 relative";
