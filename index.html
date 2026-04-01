@@ -319,7 +319,7 @@
                 <div class="w-full md:w-2/3 flex flex-col gap-6">
                     <!-- 新增總結算區塊 -->
                     <div class="bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#8B5CF6]">
-                        <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">📊 總結算 (最後誰要給誰)</h2>
+                        <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">📊 總結算</h2>
                         <div id="split-summary" class="flex flex-wrap gap-3">
                             <!-- JS 渲染抵銷後的總結算 -->
                         </div>
@@ -1216,8 +1216,8 @@
             DOM_splitSummary.innerHTML = "";
 
             if (state.bills.length === 0) {
-                DOM_splitList.innerHTML = "<p class='text-center py-6 text-gray-400'>目前沒有分帳紀錄，太棒了！大家都結清了！</p>";
-                DOM_splitSummary.innerHTML = "<p class='text-gray-400'>結算結果互不相欠！</p>";
+                DOM_splitList.innerHTML = "<p class='text-center py-6 text-gray-400'>目前沒有分帳紀錄！</p>";
+                DOM_splitSummary.innerHTML = "<p class='text-gray-400 text-center w-full py-2'>欠錢還錢！！</p>";
                 return;
             }
 
@@ -1275,7 +1275,7 @@
             }
 
             if (netDebts.length === 0) {
-                DOM_splitSummary.innerHTML = "<p class='text-gray-400'>結算結果互不相欠！</p>";
+                DOM_splitSummary.innerHTML = "<p class='text-gray-400 text-center w-full py-2'>欠錢還錢！！</p>";
             } else {
                 netDebts.forEach(debt => {
                     const el = document.createElement("div");
