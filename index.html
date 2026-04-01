@@ -46,6 +46,7 @@
             <button id="nav-home" class="font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white">抽抽</button>
             <button id="nav-admin" class="font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#E27D60] hover:text-white">吃啥</button>
             <button id="nav-drink" class="font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#41B3A3] hover:text-white">喝啥抽抽</button>
+            <button id="nav-split" class="font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#8B5CF6] hover:text-white">分帳</button>
         </nav>
     </header>
 
@@ -56,7 +57,7 @@
             
             <!-- 左側 3/4：主要抽籤流程 -->
             <div class="w-full lg:w-3/4 space-y-6">
-                <!-- 1. 誰抽籤 -->
+                <!-- 1. 誰抽 -->
                 <div class="bg-white rounded-xl p-5 md:p-8 shadow-sm border-t-4 border-[#E27D60]">
                     <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">1. 誰抽籤</h2>
                     <div class="flex flex-col sm:flex-row gap-3 mb-4">
@@ -277,6 +278,54 @@
             </div>
         </div>
 
+        <!-- ==================== 第四頁：分帳功能 ==================== -->
+        <div id="split-view" class="hidden">
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                
+                <div class="w-full md:w-1/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#8B5CF6] md:sticky md:top-24 z-10">
+                    <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2 text-[#8B5CF6]">💰 新增分帳</h2>
+                    <form id="split-form" class="space-y-4">
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">名目 (例如：八曜和茶)</label>
+                            <input type="text" id="split-title" required class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">總金額</label>
+                            <input type="number" id="split-amount" required min="1" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">代墊者 (誰先付錢)</label>
+                            <select id="split-payer" required class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]">
+                                <option value="" disabled selected>-- 請選擇 --</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold mb-1 text-sm text-[#3E4A59]">分攤人員 (預設全選)</label>
+                            <div id="split-participants" class="flex flex-wrap mt-1 gap-y-2">
+                                <!-- JS動態產生 -->
+                            </div>
+                            <p id="split-participants-error" class="text-red-500 text-xs hidden mt-1">請至少勾選一位分攤人員</p>
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="submit" id="btn-submit-split" class="w-full bg-[#8B5CF6] text-white px-4 py-2 rounded-md hover:bg-[#7C3AED] transition-colors font-bold whitespace-nowrap">新增並平均分攤</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="w-full md:w-2/3 bg-white rounded-xl p-5 md:p-6 shadow-sm border-t-4 border-[#8B5CF6]">
+                    <h2 class="text-lg font-bold mb-4 border-b-2 border-gray-100 pb-2">🧾 分帳紀錄 (大家欠誰錢)</h2>
+                    <ul id="split-list" class="space-y-3">
+                        <!-- JS 渲染 -->
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
     </main>
 
     <!-- 邏輯腳本區塊 -->
@@ -284,7 +333,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, serverTimestamp, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js"; // 新增 getDocs, deleteDoc
+        import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, serverTimestamp, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js"; 
 
         // ==========================================
         // Firebase 設定與初始化
@@ -317,6 +366,7 @@
             members: [],
             restaurants: [],
             drinks: [],
+            bills: [],
             logs: [],
             selectedDrawer: null,
             eatMethods: ["騎車買回來", "騎車出去吃", "走路出去吃", "訂公司午餐", "訂Uber Eats"],
@@ -395,6 +445,7 @@
                     });
                 }
                 renderMembers();
+                updateSplitMembersUI(); 
             }, (err) => handleFirestoreError(err, '成員'));
 
             // 2. 監聽餐廳
@@ -421,6 +472,14 @@
                 state.logs.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
                 renderLogs(state.logs.slice(0, 50)); 
             }, (err) => handleFirestoreError(err, '紀錄'));
+
+            // 5. 監聽分帳紀錄
+            onSnapshot(getDbCol('bills'), (snap) => {
+                state.bills = [];
+                snap.forEach(d => { if (d.data().active !== false) state.bills.push({ id: d.id, ...d.data() }); });
+                state.bills.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+                renderBills();
+            }, (err) => handleFirestoreError(err, '分帳'));
         }
 
         // ==========================================
@@ -428,13 +487,15 @@
         // ==========================================
         const views = {
             home: document.getElementById('home-view'),
+            admin: document.getElementById('admin-view'),
             drink: document.getElementById('drink-view'),
-            admin: document.getElementById('admin-view')
+            split: document.getElementById('split-view')
         };
         const navBtns = {
             home: document.getElementById('nav-home'),
+            admin: document.getElementById('nav-admin'),
             drink: document.getElementById('nav-drink'),
-            admin: document.getElementById('nav-admin')
+            split: document.getElementById('nav-split')
         };
 
         function switchView(viewName) {
@@ -445,41 +506,40 @@
                         navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white";
                         views[k].classList.add('flex');
                     }
+                    else if(k === 'admin') navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white";
                     else if(k === 'drink') navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#41B3A3] text-white";
-                    else navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#E27D60] text-white";
+                    else if(k === 'split') navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors bg-[#8B5CF6] text-white";
                 } else {
                     views[k].classList.add('hidden');
                     if (k === 'home') views[k].classList.remove('flex');
                     if(k === 'drink') navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#41B3A3] hover:text-white";
+                    else if(k === 'split') navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#8B5CF6] hover:text-white";
                     else navBtns[k].className = "font-bold px-4 py-2 rounded-md transition-colors text-[#3E4A59] hover:bg-[#E27D60] hover:text-white";
                 }
             });
         }
         navBtns.home.onclick = () => switchView('home');
-        navBtns.drink.onclick = () => switchView('drink');
         navBtns.admin.onclick = () => switchView('admin');
+        navBtns.drink.onclick = () => switchView('drink');
+        navBtns.split.onclick = () => switchView('split');
 
         // ==========================================
         // 區塊：誰抽籤
         // ==========================================
         const DOM_members = document.getElementById("member-list");
         const DOM_newMember = document.getElementById("new-member-name");
-        
-        // 新增：刪除成員邏輯
+
         window.deleteMember = async (id, name) => {
             if(confirm(`確定要刪除成員「${name}」嗎？`)) {
                 try {
                     await updateDoc(getDbDoc("members", id), { active: false });
                     showToast(`🗑️ 已刪除成員「${name}」`);
-                    
-                    // 如果刪除的剛好是目前選中的抽籤者，就重置狀態
                     if (state.selectedDrawer === name) {
                         state.selectedDrawer = null;
                         document.getElementById("drawer-result").classList.add("hidden");
                         document.getElementById("step2-card").classList.add("opacity-40", "pointer-events-none");
                     }
                 } catch(e) {
-                    console.error("刪除成員失敗", e);
                     showToast("❌ 刪除失敗，請檢查權限", true);
                 }
             }
@@ -491,10 +551,8 @@
                 const wrapper = document.createElement("div");
                 const isSelected = state.selectedDrawer === m.name;
                 
-                // 改用 wrapper 組合「名稱按鈕」與「刪除按鈕」
                 wrapper.className = `inline-flex items-stretch rounded-full border transition-colors overflow-hidden ${isSelected ? 'bg-[#E27D60] text-white border-[#E27D60]' : 'bg-[#FDFBF7] text-[#3E4A59] border-[#E0E4E8] hover:border-[#E8A87C]'}`;
 
-                // 名稱按鈕 (選擇抽籤者)
                 const nameBtn = document.createElement("button");
                 nameBtn.className = `px-3 py-1.5 font-bold transition-colors ${isSelected ? 'hover:bg-[#c9654a]' : 'hover:bg-[#E8A87C] hover:text-white'}`;
                 nameBtn.textContent = m.name;
@@ -506,12 +564,11 @@
                     document.getElementById("step2-card").classList.remove("opacity-40", "pointer-events-none");
                 };
 
-                // 刪除按鈕 (✖)
                 const delBtn = document.createElement("button");
                 delBtn.className = `px-2 py-1.5 text-xs flex items-center justify-center transition-colors ${isSelected ? 'text-white hover:bg-[#c9654a]' : 'text-gray-400 hover:text-red-500 hover:bg-gray-100'}`;
                 delBtn.innerHTML = "✖";
                 delBtn.onclick = (e) => {
-                    e.stopPropagation(); // 防止觸發到父層或其他元素的點擊事件
+                    e.stopPropagation(); 
                     deleteMember(m.id, m.name);
                 };
 
@@ -520,12 +577,14 @@
                 DOM_members.appendChild(wrapper);
             });
         }
+
         document.getElementById("btn-add-member").onclick = async () => {
             const name = DOM_newMember.value.trim();
             if (!name || state.members.some(m => m.name === name)) return;
             await addDoc(getDbCol('members'), { name, active: true, createdAt: serverTimestamp() });
             DOM_newMember.value = "";
         };
+
         document.getElementById("btn-random-member").onclick = () => {
             if(state.members.length === 0) return;
             const rnd = state.members[Math.floor(Math.random() * state.members.length)];
@@ -668,7 +727,6 @@
             document.getElementById("btn-redraw-restaurant").classList.add("hidden");
             document.getElementById("btn-draw-restaurant").classList.remove("hidden");
             
-            // 讓候選餐廳支援陣列格式 (相容舊字串格式)
             state.candidateRestaurants = state.restaurants.filter(r => {
                 const methods = Array.isArray(r.eatMethod) ? r.eatMethod : [r.eatMethod];
                 return methods.includes(state.selectedEatMethod);
@@ -772,7 +830,6 @@
             });
         }
 
-        // 清空紀錄功能
         document.getElementById("btn-clear-logs").onclick = async () => {
             if (!confirm("確定要清空所有抽籤紀錄嗎？這無法復原喔！")) return;
 
@@ -787,7 +844,6 @@
                     deletePromises.push(deleteDoc(d.ref));
                 });
                 
-                // 等待所有刪除動作完成
                 await Promise.all(deletePromises);
                 showToast("🗑️ 已清空所有抽籤紀錄！");
             } catch (error) {
@@ -848,7 +904,6 @@
         document.getElementById("restaurant-form").onsubmit = async (e) => {
             e.preventDefault();
             
-            // 取得所有有被勾選的選項
             const checkedMethods = Array.from(document.querySelectorAll('input[name="eatMethod"]:checked')).map(cb => cb.value);
             if (checkedMethods.length === 0) {
                 document.getElementById('eat-method-error').classList.remove('hidden');
@@ -859,7 +914,7 @@
             const id = document.getElementById("rest-id").value;
             const data = {
                 name: document.getElementById("rest-name").value.trim(),
-                eatMethod: checkedMethods, // 存入陣列
+                eatMethod: checkedMethods, 
                 orderMethod: document.getElementById("rest-order-method").value.trim(),
                 note: document.getElementById("rest-note").value.trim(),
                 active: true
@@ -1072,6 +1127,121 @@
                 });
             } catch (err) {}
         }
+
+        // ==========================================
+        // 第四頁：分帳功能 (Split Bills)
+        // ==========================================
+        function updateSplitMembersUI() {
+            const payerSelect = document.getElementById("split-payer");
+            const currentPayer = payerSelect.value;
+            payerSelect.innerHTML = '<option value="" disabled selected>-- 選擇代墊者 --</option>';
+
+            const partContainer = document.getElementById("split-participants");
+            const currentlyChecked = Array.from(partContainer.querySelectorAll('input:checked')).map(el => el.value);
+            const isInitial = partContainer.innerHTML === '';
+            
+            partContainer.innerHTML = '';
+
+            state.members.forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m.name;
+                opt.textContent = m.name;
+                payerSelect.appendChild(opt);
+
+                const lbl = document.createElement("label");
+                lbl.className = "flex items-center space-x-1 cursor-pointer text-sm w-1/2 sm:w-1/3";
+                const isChecked = isInitial ? true : currentlyChecked.includes(m.name);
+                lbl.innerHTML = `<input type="checkbox" name="splitMember" value="${m.name}" class="form-checkbox h-4 w-4 text-[#8B5CF6] rounded" ${isChecked ? 'checked' : ''}><span>${m.name}</span>`;
+                partContainer.appendChild(lbl);
+            });
+
+            if (currentPayer && state.members.some(m => m.name === currentPayer)) {
+                payerSelect.value = currentPayer;
+            }
+        }
+
+        document.getElementById("split-form").onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const checkedMembers = Array.from(document.querySelectorAll('input[name="splitMember"]:checked')).map(cb => cb.value);
+            if (checkedMembers.length === 0) {
+                document.getElementById('split-participants-error').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('split-participants-error').classList.add('hidden');
+
+            const title = document.getElementById("split-title").value.trim();
+            const amount = parseInt(document.getElementById("split-amount").value, 10);
+            const payer = document.getElementById("split-payer").value;
+
+            if (!payer || isNaN(amount) || amount <= 0) return;
+
+            const splitAmount = Math.ceil(amount / checkedMembers.length);
+
+            document.getElementById("btn-submit-split").disabled = true;
+            try {
+                await addDoc(getDbCol("bills"), {
+                    title,
+                    amount,
+                    payer,
+                    participants: checkedMembers,
+                    splitAmount,
+                    createdAt: serverTimestamp(),
+                    active: true
+                });
+                showToast("✅ 分帳紀錄新增成功！");
+                document.getElementById("split-form").reset();
+                document.querySelectorAll('input[name="splitMember"]').forEach(cb => cb.checked = true);
+            } catch (error) { 
+                showToast("❌ 新增失敗，請檢查權限", true); 
+            }
+            document.getElementById("btn-submit-split").disabled = false;
+        };
+
+        function renderBills() {
+            const DOM_splitList = document.getElementById("split-list");
+            DOM_splitList.innerHTML = "";
+
+            if (state.bills.length === 0) {
+                DOM_splitList.innerHTML = "<p class='text-center py-6 text-gray-400'>目前沒有分帳紀錄，太棒了！大家都結清了！</p>";
+                return;
+            }
+
+            state.bills.forEach(bill => {
+                const li = document.createElement("li");
+                li.className = "flex flex-col bg-gray-50 border border-gray-200 p-4 rounded-lg gap-2 relative";
+                
+                let dateObj = new Date();
+                if (bill.createdAt?.toDate) dateObj = bill.createdAt.toDate();
+                else if (bill.createdAt?.toMillis) dateObj = new Date(bill.createdAt.toMillis());
+
+                const owesList = bill.participants
+                    .filter(p => p !== bill.payer) 
+                    .map(p => `<span class="bg-white border border-gray-200 px-2 py-1 rounded text-sm shadow-sm inline-block mb-1 mr-1 text-gray-700"><b class="text-[#8B5CF6]">${p}</b> 應給 ${bill.payer} <span class="font-bold text-red-500">$${bill.splitAmount}</span></span>`)
+                    .join('');
+
+                const owesHtml = owesList ? `<div class="mt-2 pt-2 border-t border-gray-200">${owesList}</div>` : `<div class="mt-2 text-sm text-gray-500">無人需分攤 (全由 ${bill.payer} 自付)</div>`;
+
+                li.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-lg text-[#3E4A59]">${bill.title} <span class="text-sm font-bold text-[#8B5CF6] ml-2">總計: $${bill.amount}</span></h4>
+                            <p class="text-xs text-gray-500 mt-1">🕒 ${formatDate(dateObj)} ． 代墊者: <span class="font-bold">${bill.payer}</span> ． 每人分攤: $${bill.splitAmount}</p>
+                        </div>
+                        <button class="bg-gray-200 text-gray-500 px-2 py-1 rounded hover:bg-red-500 hover:text-white transition-colors text-xs" onclick="deleteBill('${bill.id}')">結清(刪除)</button>
+                    </div>
+                    ${owesHtml}
+                `;
+                DOM_splitList.appendChild(li);
+            });
+        }
+
+        window.deleteBill = async (id) => {
+            if(confirm("確定刪除這筆分帳紀錄嗎？（代表大家都結清給代墊者了喔）")) {
+                await updateDoc(getDbDoc("bills", id), { active: false });
+                showToast("🗑️ 已結清並刪除分帳紀錄");
+            }
+        };
 
         // 啟動系統
         initSystem();
